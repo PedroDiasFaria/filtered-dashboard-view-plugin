@@ -68,7 +68,8 @@
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/synopsys-dashboard-view.js"></script>
             <script type="text/javascript">
                 var jenkinsUrl = '${rootURL}';
-                var refreshInterval = 15*1000;
+                var refreshSeconds = 15;
+                var refreshInterval = refreshSeconds*1000;
                 var nodeStatuses = [];
                 var buttonClass = '${it.statusButtonSize}';
                 var buildQueueSize = ${it.buildQueueSize};

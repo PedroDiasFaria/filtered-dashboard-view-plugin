@@ -56,3 +56,9 @@ th, td {
 .invert-text-color {
   color: black;
 }
+
+/**********************/
+
+.jobDataElem {
+    white-space: pre-line;
+}

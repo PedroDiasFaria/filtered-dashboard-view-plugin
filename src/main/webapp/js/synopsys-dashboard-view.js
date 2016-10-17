@@ -108,6 +108,7 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
   $.getJSON( viewUrl + '/api/json', function( data ) {
     // Remove all existing divs
     $(divSelector + ' button').remove();
+    var countId = 0;
     $.each( data.allJobsStatuses, function( key, val ) {
       switch (val.status) {
         case 'SUCCESS':
@@ -131,36 +132,23 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
           classes = 'btn-primary';
       }
       console.log(val);
-      jobData = expand_jenkins_job_data(viewUrl, val.jobUrl);
+
+        var id = 'job' + countId;
+        var expandableId = 'expandable' + id;
+        countId++;
       newDiv =
-      '<button class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + val.jobName +
-      '<p><a href="' + val.jobUrl + '">' + 'gtp->' + '</a></p>' +
-      '<p>' + 'expnd->' + jobData + '</p>' +
-      '</button>' +
-      '</a>';
+
+      '<button class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.jobName + '</p>' +
+          '<p><a href="' + val.jobUrl + '">' + 'Go To Project' + '</a></p>' +
+
+            '<div class="expandable">' +
+                '<div class="jobDataElem">' + val.jobData.dir + '</br>' + '</div>' +
+                '<div class="jobDataElem">' + val.jobData.lastBuildNr + '</br>'+ '</div>' +
+            '</div>' +
+      '</button>';
+
+      console.log('jobData: ' + val.jobData);
       $(divSelector).append(newDiv);
     });
   });
-}
-
-//pass arguments to get the specific info
-function expand_jenkins_job_data(viewUrl, jobUrl){
-    console.log('joburl: ' + jobUrl);
-    console.log('viewurl:' + viewUrl);
-    count = 0;
-    allProperties = "";
-    $.getJSON(viewUrl + '/api/json', function(data){
-        $.each(data.allJobData, function(key, val){
-        console.log(count++);
-        console.log('val.allProperties b4:' + allProperties);
-
-            allProperties = val.allProperties;
-            console.log("all properties after1:" + allProperties);
-            return false;
-        });
-        console.log("all properties after2:" + allProperties);
-        return false;
-    });
-    console.log("all properties after3:" + allProperties);
-    return allProperties;
 }

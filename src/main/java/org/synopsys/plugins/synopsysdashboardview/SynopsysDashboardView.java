@@ -253,10 +253,10 @@ public class SynopsysDashboardView extends View{
     //Test Function to get all info
     // search by jobId ? or jobname
     // add argument
-    @Exported(name="allJobData")
-    public Collection<JobData> getAllJobData(){
+    /*@Exported//(name="allJobData")
+    public Collection<JobData> getAllJobData(String jobId){
 
-
+        Job job = Jenkins.getInstance().getItem();
        ArrayList<JobData> jobData = new  ArrayList<JobData>();
         jobData.add(new JobData("ALL PROPERTIES OF THIS JOB RETURNED"));
 
@@ -281,7 +281,12 @@ public class SynopsysDashboardView extends View{
     public Collection<JobStatus> getAllJobsStatuses() {
         List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
         ArrayList<JobStatus> statuses = new ArrayList<JobStatus>();
-        String status, name, url;
+        String status, name;
+
+        /********/
+        String url;
+        int lastBuildNr = 0;
+        /********/
         Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
         for (Job j : jobs) {
@@ -296,15 +301,16 @@ public class SynopsysDashboardView extends View{
 
             // Get the url to link it in the dashboard
             url = j.getUrl();
-
             if (j.isBuilding()) {
                 status = "BUILDING";
             } else {
                 Run lb = j.getLastBuild();
                 if (lb == null) {
                     status = "NOTBUILT";
+                    lastBuildNr = 0;
                 } else {
                     status = lb.getResult().toString();
+                    lastBuildNr = j.getLastBuild().getNumber();
                 }
             }
 
@@ -315,7 +321,11 @@ public class SynopsysDashboardView extends View{
                 name = j.getName();
             }
 
-            statuses.add(new JobStatus(name, status, url));
+            String dir = j.getBuildDir().toString();
+
+            JobData jobData = new JobData(dir, lastBuildNr);
+
+            statuses.add(new JobStatus(name, status, url, jobData));
         }
 
         return statuses;
@@ -330,10 +340,32 @@ public class SynopsysDashboardView extends View{
         @Exported
         public String jobUrl;
 
-        public JobStatus(String jobName, String status, String jobUrl) {
+        /*********/
+        @Exported
+        public JobData jobData;
+        /*********/
+
+        public JobStatus(String jobName, String status, String jobUrl, JobData jobData) {
             this.jobName = jobName;
             this.status = status;
             this.jobUrl = jobUrl;
+
+            /*********/
+            this.jobData = jobData;
+            /*********/
+        }
+    }
+
+    @ExportedBean(defaultVisibility = 999)
+    public class JobData{
+        @Exported
+        public String dir;
+        @Exported
+        public int lastBuildNr;
+
+        JobData(String dir, int lastBuildNr){
+            this.dir = dir;
+            this.lastBuildNr = lastBuildNr;
         }
     }
 
