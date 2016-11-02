@@ -95,7 +95,6 @@ function reload_jenkins_build_history(tableSelector, viewUrl, buildHistorySize) 
           classes = 'info invert-text-color';
           break;
         default:
-          console.log('Job: ' + val.jobName + ' Result: ' + val.result);
           classes = '';
       }
       newRow = '<tr class="' + classes + '"><td class="text-left">' + jobName + '</td><td>' + val.number + '</td><td>' + format_date(dt) + '</td><td>' + format_interval(val.duration) + '</td></tr>';
@@ -109,7 +108,7 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
     // Remove all existing divs
     $(divSelector + ' button').remove();
     $.each( data.allJobsStatuses, function( key, val ) {
-      switch (val.status) {
+      switch (val.Status.value) {
         case 'SUCCESS':
           classes = 'btn-success';
           break;
@@ -130,26 +129,28 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
           console.log('Job: ' + val.jobName + ' Status: ' + val.status);
           classes = 'btn-primary';
       }
-      console.log(val);
+
+      expandable = "";
+
+      //Div with extra information
+      for (var key in val) {
+        if(val[key].additionalInfo == "expandable"){
+                        console.log(key, val[key].additionalInfo);
+          expandable+=
+            '<div class="jobDataElem">' +
+                '<b class="dataElemLabel col-md-3 pull-left">'+ val[key].label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val[key].value + '</span></br>' +
+            '</div>'
+        }
+      }
 
       newDiv =
-
-      '<button id="' + val.jobName + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.jobName + '</p>' +
-          '<p><a class="goTo" href="' + val.jobUrl + '">' + '(Go To Project)' + '</a></p>' +
-
-//create a for() for each element (wih label + value)
-            '<div class="expandable">' +
-                '<div class="jobDataElem">' +
-                    '<b class="dataElemLabel col-md-3 pull-left">'+ val.jobData.dir.label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val.jobData.dir.value + '</span></br>' +
-                '</div>' +
-                '<div class="jobDataElem">' +
-                    '<b class="dataElemLabel col-md-3 pull-left">'+ val.jobData.lastBuildNr.label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val.jobData.lastBuildNr.value + '</span></br>' +
-                '</div>' +
+      '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
+          '<p><a class="goTo" href="' + val.JobURL.value + '">' + '(Go To Project)' + '</a></p>' +
+            '<div id="expandable_'+val.JobName.value+'">' +
+                expandable +
             '</div>' +
-
       '</button>';
 
-      console.log('jobData: ' + val.jobData);
       $(divSelector).append(newDiv);
     });
   });

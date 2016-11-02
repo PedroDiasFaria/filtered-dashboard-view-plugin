@@ -323,9 +323,9 @@ public class SynopsysDashboardView extends View{
 
             String dir = j.getBuildDir().toString();
 
-            JobData jobData = new JobData(dir, Integer.toString(lastBuildNr));
+           // JobData jobData = new JobData(dir, Integer.toString(lastBuildNr));
 
-            statuses.add(new JobStatus(name, status, url, jobData));
+            statuses.add(new JobStatus(name, status, url, dir, Integer.toString(lastBuildNr)));
         }
 
         return statuses;
@@ -336,49 +336,22 @@ public class SynopsysDashboardView extends View{
     public class JobStatus {
 
         @Exported
-        public JobData JobName = new JobData("Job Name", "");
+        public JobData JobName = new JobData("Name", "", "");
         @Exported
-        public JobData Status = new JobData();
+        public JobData Status = new JobData("Status", "", "");
         @Exported
-        public JobData JobURL;
+        public JobData JobURL = new JobData("URL", "", "");
         @Exported
-        public JobData Dir;
+        public JobData Dir = new JobData("Directory", "", "expandable");
         @Exported
-        public JobData LastBuildNr;
+        public JobData LastBuildNr = new JobData("Last Build", "", "expandable");
 
-        @Exported
-        public String jobName;
-        @Exported
-        public String status;
-        @Exported
-        public String jobUrl;
-
-        /*********/
-        @Exported
-        public JobData jobData;
-        /*********/
-
-        public JobStatus(String jobName, String status, String jobUrl, JobData jobData) {
-            this.jobName = jobName;
-            this.status = status;
-            this.jobUrl = jobUrl;
-
-            /*********/
-            this.jobData = jobData;
-            /*********/
-        }
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class JobDatas{
-        @Exported
-        public JobDataX dir;
-        @Exported
-        public JobDataX lastBuildNr;
-
-        JobData(String dir, String lastBuildNr){
-            this.dir = new JobDataX("Directory", dir);
-            this.lastBuildNr = new JobDataX("Last Build", lastBuildNr);
+        public JobStatus(String jobName, String status, String jobUrl, String dir, String lastBuildNr) {
+            this.JobName.setValue(jobName);
+            this.Status.setValue(status);
+            this.JobURL.setValue(jobUrl);
+            this.Dir.setValue(dir);
+            this.LastBuildNr.setValue(lastBuildNr);
         }
     }
 
@@ -388,12 +361,14 @@ public class SynopsysDashboardView extends View{
         public String label;
         @Exported
         public String value;
+        @Exported
+        public String additionalInfo;
 
-        JobData(String label, String value){
+        JobData(String label, String value, String info){
             this.label = label;
             this.value = value;
+            this.additionalInfo = info;
         }
-
         public void setValue(String value){
             this.value = value;
         }
