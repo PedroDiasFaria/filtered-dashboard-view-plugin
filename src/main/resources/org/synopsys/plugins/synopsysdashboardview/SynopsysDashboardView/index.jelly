@@ -11,6 +11,10 @@
 
             <title>Jenkins - ${%Title}</title>
 
+            <!-- Extra bootstrap functions -->
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
             <!-- Bootstrap -->
             <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
             <!-- Snps Dashboard -->
@@ -84,7 +88,12 @@
                     reload_jenkins_build_queue('#jenkinsBuildQueue', jenkinsUrl, buildQueueSize);
                     reload_jenkins_node_statuses('#jenkinsNodeStatuses', jenkinsUrl, nodeStatuses, buttonClass);
 
+                    <!-- Views container instead of jobs -->
+                    reload_jenkins_views_statuses('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);
+
                     setTimeout(function(){ reload_info(interval); }, interval);
+
+
                 }
 
                 $$(document).ready(function(){

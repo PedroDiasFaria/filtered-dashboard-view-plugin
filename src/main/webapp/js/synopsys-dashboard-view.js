@@ -126,7 +126,6 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
           classes = 'btn-info invert-text-color';
           break;
         default:
-          console.log('Job: ' + val.jobName + ' Status: ' + val.status);
           classes = 'btn-primary';
       }
 
@@ -135,7 +134,6 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
       //Div with extra information
       for (var key in val) {
         if(val[key].additionalInfo == "expandable"){
-                        console.log(key, val[key].additionalInfo);
           expandable+=
             '<div class="jobDataElem">' +
                 '<b class="dataElemLabel col-md-3 pull-left">'+ val[key].label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val[key].value + '</span></br>' +
@@ -146,12 +144,24 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
       newDiv =
       '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
           '<p><a class="goTo" href="' + val.JobURL.value + '">' + '(Go To Project)' + '</a></p>' +
-            '<div id="expandable_'+val.JobName.value+'">' +
+
+        //  '<a class="pull-left btn btn-primary" data-toggle="collapse" data-target="expandable_'+val.JobName.value+'">Expand+</a>'+
+
+            '<div id="expandable_'+val.JobName.value+'" class="">' +
                 expandable +
             '</div>' +
+
       '</button>';
 
       $(divSelector).append(newDiv);
     });
   });
+}
+
+function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
+    $.getJSON( viewUrl + '/api/json', function(data){
+        $.each(data.views, function(key, val){
+            console.log("VIEWS: " + val);
+        });
+    });
 }

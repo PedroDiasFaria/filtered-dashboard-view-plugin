@@ -1,12 +1,15 @@
 package org.synopsys.plugins.synopsysdashboardview;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.*;
 import hudson.security.Permission;
 import hudson.util.RunList;
+import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -17,16 +20,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+//
+import hudson.views.ListViewColumn;
+import hudson.views.ViewsTabBar;
+
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.export.Exported;
+import static hudson.Util.fixEmpty;
+
 /**
  * Created by faria on 10-Oct-16.
  */
-public class SynopsysDashboardView extends View{
+public class SynopsysDashboardView extends View implements ViewGroup, StaplerProxy{
 
 
     //From missioncontrol
@@ -39,6 +51,11 @@ public class SynopsysDashboardView extends View{
     private String statusButtonSize;
     private String layoutHeightRatio;
     private String filterRegex;
+
+    /******/
+    private final CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
+
+    private String defaultView;
 
 
     @DataBoundConstructor
@@ -66,6 +83,7 @@ public class SynopsysDashboardView extends View{
     @Override
     protected void submit(StaplerRequest req) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
+        defaultView = Util.fixEmpty(req.getParameter("defaultView"));
 
         //From missioncontrol
         /**********************/
@@ -166,6 +184,75 @@ public class SynopsysDashboardView extends View{
         return layoutHeightRatio.substring(2, 4);
     }
 
+    //Viewgroup functions
+    //https://github.com/jenkinsci/nested-view-plugin/blob/master/src/main/java/hudson/plugins/nested_view/NestedView.java
+    /**********/
+    @Override
+    public ItemGroup<? extends TopLevelItem> getItemGroup(){
+        return getOwnerItemGroup();
+    }
+
+    @Override
+    public View getPrimaryView(){
+        return null;
+    }
+
+    public boolean canDelete(View view){
+        return false;
+    }
+
+    @Override
+    public List<Action> getViewActions(){
+        return getOwner().getViewActions();
+    }
+
+    public ViewsTabBar getViewsTabBar(){
+        return Hudson.getInstance().getViewsTabBar();
+    }
+
+    public View getView(String name){
+        for(View v : views)
+            if(v.getViewName().equals(name))
+                return v;
+        return null;
+    }
+
+    public void deleteView(View view) throws IOException{
+        views.remove(view);
+        save();
+    }
+
+    public void onViewRenamed(View view, String oldName, String newName){
+
+    }
+    /**********/
+
+    //Stapler Proxy Functions
+    /**********/
+    public Object getTarget() {
+        // Proxy to handle redirect when a default subview is configured
+        return (getDefaultView() != null &&
+                "".equals(Stapler.getCurrentRequest().getRestOfPath()))
+                ? new DefaultViewProxy() : this;
+    }
+
+    public View getDefaultView() {
+        // Don't allow default subview for a NestedView that is the Jenkins default view..
+        // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
+        return isDefault() ? null : getView(defaultView);
+    }
+
+    public class DefaultViewProxy {
+        public void doIndex(StaplerRequest req, StaplerResponse rsp)
+                throws IOException, ServletException {
+            if (getDefaultView() != null)
+                rsp.sendRedirect2("view/" + defaultView);
+            else
+                req.getView(SynopsysDashboardView.this, "index.jelly").forward(req, rsp);
+        }
+    }
+    /**********/
+
     @Override
     public boolean hasPermission(final Permission p) { return true; }
 
@@ -183,6 +270,16 @@ public class SynopsysDashboardView extends View{
     public Api getApi() {
         return new Api(this);
     }
+
+    /********/
+    /** Views Inside View functions **/
+
+    @Exported(name="views")
+    public Collection<View> getViews(){
+        List<View> viewsList = new ArrayList<View>(views);
+        return viewsList;
+    }
+    /********/
 
     @Exported(name="builds")
     public Collection<Build> getBuildHistory() {
