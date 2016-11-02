@@ -59,6 +59,13 @@ th, td {
 
 /**********************/
 
-.jobDataElem {
-    white-space: pre-line;
+.goTo {
+    font-size: 90%;
+}
+
+.dataElemValue{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    width
 }

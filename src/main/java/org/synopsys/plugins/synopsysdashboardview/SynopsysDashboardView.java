@@ -323,7 +323,7 @@ public class SynopsysDashboardView extends View{
 
             String dir = j.getBuildDir().toString();
 
-            JobData jobData = new JobData(dir, lastBuildNr);
+            JobData jobData = new JobData(dir, Integer.toString(lastBuildNr));
 
             statuses.add(new JobStatus(name, status, url, jobData));
         }
@@ -331,8 +331,21 @@ public class SynopsysDashboardView extends View{
         return statuses;
     }
 
+    //each string should be a class with label+value
     @ExportedBean(defaultVisibility = 999)
     public class JobStatus {
+
+        @Exported
+        public JobData JobName = new JobData("Job Name", "");
+        @Exported
+        public JobData Status = new JobData();
+        @Exported
+        public JobData JobURL;
+        @Exported
+        public JobData Dir;
+        @Exported
+        public JobData LastBuildNr;
+
         @Exported
         public String jobName;
         @Exported
@@ -357,15 +370,32 @@ public class SynopsysDashboardView extends View{
     }
 
     @ExportedBean(defaultVisibility = 999)
+    public class JobDatas{
+        @Exported
+        public JobDataX dir;
+        @Exported
+        public JobDataX lastBuildNr;
+
+        JobData(String dir, String lastBuildNr){
+            this.dir = new JobDataX("Directory", dir);
+            this.lastBuildNr = new JobDataX("Last Build", lastBuildNr);
+        }
+    }
+
+    @ExportedBean(defaultVisibility = 999)
     public class JobData{
         @Exported
-        public String dir;
+        public String label;
         @Exported
-        public int lastBuildNr;
+        public String value;
 
-        JobData(String dir, int lastBuildNr){
-            this.dir = dir;
-            this.lastBuildNr = lastBuildNr;
+        JobData(String label, String value){
+            this.label = label;
+            this.value = value;
+        }
+
+        public void setValue(String value){
+            this.value = value;
         }
     }
 

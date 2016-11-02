@@ -108,7 +108,6 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
   $.getJSON( viewUrl + '/api/json', function( data ) {
     // Remove all existing divs
     $(divSelector + ' button').remove();
-    var countId = 0;
     $.each( data.allJobsStatuses, function( key, val ) {
       switch (val.status) {
         case 'SUCCESS':
@@ -133,18 +132,21 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
       }
       console.log(val);
 
-        var id = 'job' + countId;
-        var expandableId = 'expandable' + id;
-        countId++;
       newDiv =
 
-      '<button class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.jobName + '</p>' +
-          '<p><a href="' + val.jobUrl + '">' + 'Go To Project' + '</a></p>' +
+      '<button id="' + val.jobName + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.jobName + '</p>' +
+          '<p><a class="goTo" href="' + val.jobUrl + '">' + '(Go To Project)' + '</a></p>' +
 
+//create a for() for each element (wih label + value)
             '<div class="expandable">' +
-                '<div class="jobDataElem">' + val.jobData.dir + '</br>' + '</div>' +
-                '<div class="jobDataElem">' + val.jobData.lastBuildNr + '</br>'+ '</div>' +
+                '<div class="jobDataElem">' +
+                    '<b class="dataElemLabel col-md-3 pull-left">'+ val.jobData.dir.label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val.jobData.dir.value + '</span></br>' +
+                '</div>' +
+                '<div class="jobDataElem">' +
+                    '<b class="dataElemLabel col-md-3 pull-left">'+ val.jobData.lastBuildNr.label +': </b>' + '<span class="dataElemValue col-md-9 pull-right">' + val.jobData.lastBuildNr.value + '</span></br>' +
+                '</div>' +
             '</div>' +
+
       '</button>';
 
       console.log('jobData: ' + val.jobData);
