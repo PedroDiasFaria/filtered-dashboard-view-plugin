@@ -159,9 +159,11 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
 }
 
 function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
+
     $.getJSON( viewUrl + '/api/json', function(data){
         $.each(data.views, function(key, val){
             console.log("VIEWS: " + val);
         });
     });
+    console.log("views_statuses");
 }

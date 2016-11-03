@@ -9,7 +9,6 @@ import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -40,7 +39,6 @@ import static hudson.Util.fixEmpty;
  */
 public class SynopsysDashboardView extends View implements ViewGroup, StaplerProxy{
 
-
     //From missioncontrol
     private transient int getBuildsLimit;
     private String viewName;
@@ -52,12 +50,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private String layoutHeightRatio;
     private String filterRegex;
 
+    //Allways hold at least one view
+    private CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
+    private transient ViewGroupMixIn viewGroupMixIn;
+    private String defaultViewName;
+
+
     /******/
-    private final CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
-
-    private String defaultView;
-
-
     @DataBoundConstructor
     public SynopsysDashboardView(String name, String viewName) {
         super(name);
@@ -83,7 +82,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     @Override
     protected void submit(StaplerRequest req) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
-        defaultView = Util.fixEmpty(req.getParameter("defaultView"));
+        defaultViewName = Util.fixEmpty(req.getParameter("defaultView"));
 
         //From missioncontrol
         /**********************/
@@ -142,6 +141,34 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         if (layoutHeightRatio == null)
             layoutHeightRatio = "6040";
 
+        /*ViewGruopMix in and sets primary view*/
+        if (views == null) {
+            views = new CopyOnWriteArrayList<View>();
+        }
+
+        if (views.isEmpty()) {
+            // preserve the non-empty invariant
+            views.add(new ListView("Default", this));
+        }
+
+        viewGroupMixIn = new ViewGroupMixIn(this) {
+
+            @Override
+            protected List<View> views() {
+                return views;
+            }
+
+            @Override
+            protected String primaryView() {
+                return defaultViewName;
+            }
+
+            @Override
+            protected void primaryView(String name) {
+                defaultViewName = name;
+            }
+        };
+
         return this;
     }
     public int getFontSize() {
@@ -187,6 +214,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Viewgroup functions
     //https://github.com/jenkinsci/nested-view-plugin/blob/master/src/main/java/hudson/plugins/nested_view/NestedView.java
     /**********/
+
     @Override
     public ItemGroup<? extends TopLevelItem> getItemGroup(){
         return getOwnerItemGroup();
@@ -194,7 +222,14 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getPrimaryView(){
-        return null;
+        /*
+            View v = getView(defaultViewName);
+            if(v==null) // fallback
+                v = views.get(0);
+
+            System.out.println("View is: " + v.toString());
+            return v;*/
+        return viewGroupMixIn.getPrimaryView();
     }
 
     public boolean canDelete(View view){
@@ -210,15 +245,23 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return Hudson.getInstance().getViewsTabBar();
     }
 
+    @Override
     public View getView(String name){
-        for(View v : views)
+       /* for(View v : views)
             if(v.getViewName().equals(name))
                 return v;
-        return null;
+        // Fallback to subview of primary view if it is a ViewGroup
+        View pv = getPrimaryView(); //line that causes problems
+        if (pv instanceof ViewGroup)
+            return ((ViewGroup)pv).getView(name);
+        return null;*/
+
+       return viewGroupMixIn.getView(name);
     }
 
+    @Override
     public void deleteView(View view) throws IOException{
-        views.remove(view);
+        viewGroupMixIn.deleteView(view);
         save();
     }
 
@@ -227,31 +270,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     }
     /**********/
 
-    //Stapler Proxy Functions
-    /**********/
-    public Object getTarget() {
-        // Proxy to handle redirect when a default subview is configured
-        return (getDefaultView() != null &&
-                "".equals(Stapler.getCurrentRequest().getRestOfPath()))
-                ? new DefaultViewProxy() : this;
-    }
-
-    public View getDefaultView() {
-        // Don't allow default subview for a NestedView that is the Jenkins default view..
-        // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
-        return isDefault() ? null : getView(defaultView);
-    }
-
-    public class DefaultViewProxy {
-        public void doIndex(StaplerRequest req, StaplerResponse rsp)
-                throws IOException, ServletException {
-            if (getDefaultView() != null)
-                rsp.sendRedirect2("view/" + defaultView);
-            else
-                req.getView(SynopsysDashboardView.this, "index.jelly").forward(req, rsp);
-        }
-    }
-    /**********/
 
     @Override
     public boolean hasPermission(final Permission p) { return true; }
@@ -274,11 +292,38 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     /********/
     /** Views Inside View functions **/
 
-    @Exported(name="views")
+    @Exported(name="allViews")
     public Collection<View> getViews(){
-        List<View> viewsList = new ArrayList<View>(views);
-        return viewsList;
+        //return viewGroupMixIn.getViews();
+        return Jenkins.getInstance().getViews();
     }
+    /********/
+
+    /********/
+    /** StapplerProxy **/
+    public Object getTarget() {
+        // Proxy to handle redirect when a default subview is configured
+        return (getDefaultView() != null &&
+                "".equals(Stapler.getCurrentRequest().getRestOfPath()))
+                ? new DefaultViewProxy() : this;
+    }
+
+    public View getDefaultView() {
+        // Don't allow default subview for a NestedView that is the Jenkins default view..
+        // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
+        return isDefault() ? null : getView(defaultViewName);
+    }
+
+    public class DefaultViewProxy {
+        public void doIndex(StaplerRequest req, StaplerResponse rsp)
+                throws IOException, ServletException {
+            if (getDefaultView() != null)
+                rsp.sendRedirect2("view/" + defaultViewName);
+            else
+                req.getView(SynopsysDashboardView.this, "index.jelly").forward(req, rsp);
+        }
+    }
+
     /********/
 
     @Exported(name="builds")
@@ -347,30 +392,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     }
 
     /*******/
-    //Test Function to get all info
-    // search by jobId ? or jobname
-    // add argument
-    /*@Exported//(name="allJobData")
-    public Collection<JobData> getAllJobData(String jobId){
-
-        Job job = Jenkins.getInstance().getItem();
-       ArrayList<JobData> jobData = new  ArrayList<JobData>();
-        jobData.add(new JobData("ALL PROPERTIES OF THIS JOB RETURNED"));
-
-
-        return jobData;
-    }
-
-    //what's default visibility?
-    @ExportedBean(defaultVisibility = 999)
-    public class JobData{
-        @Exported
-        public String allProperties;
-
-        public JobData(String allProperties){
-            this.allProperties = allProperties;
-        }
-    }
 
     /*******/
 
