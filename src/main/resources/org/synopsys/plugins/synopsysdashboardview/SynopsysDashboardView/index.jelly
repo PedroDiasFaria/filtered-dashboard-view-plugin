@@ -56,15 +56,25 @@
                 <!-- Right half -->
                 <div class="col-lg-6 right-border height100perc">
                     <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
-                        <h4>${%Projects}</h4>
+                        <h4>${%Jobs}</h4>
                         <!-- JENKINS_URL/api/json -->
                         <div id="jenkinsJobStatuses" class="col-lg-12"></div>
                     </div>
+                    <!-- just to test the projects view -->
+
+                    <!-- testing without nodes for now
                     <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
                         <h4>${%Nodes}</h4>
-                        <!-- JENKINS_URL/computer/api/json -->
+                        <!- JENKINS_URL/computer/api/json->
                         <div id="jenkinsNodeStatuses" class="col-lg-12"></div>
+                    </div> -->
+
+                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
+                        <h4>${%Projects}</h4>
+                        <!-- JENKINS_URL/computer/api/json-->
+                        <div id="jenkinsViewsStatuses" class="col-lg-12"></div>
                     </div>
+
                 </div>
             </div>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script>
@@ -86,10 +96,12 @@
                     reload_jenkins_build_history('#jenkinsBuildHistory', jenkinsUrl + '/${it.url}', buildHistorySize);
                     reload_jenkins_job_statuses('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);
                     reload_jenkins_build_queue('#jenkinsBuildQueue', jenkinsUrl, buildQueueSize);
-                    reload_jenkins_node_statuses('#jenkinsNodeStatuses', jenkinsUrl, nodeStatuses, buttonClass);
+
+
+                    <!--reload_jenkins_node_statuses('#jenkinsNodeStatuses', jenkinsUrl, nodeStatuses, buttonClass);-->
 
                     <!-- Views container instead of jobs -->
-                    <!--reload_jenkins_views_statuses('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);-->
+                    reload_jenkins_views_statuses('#jenkinsViewsStatuses', jenkinsUrl + '/${it.url}', buttonClass);
 
                     setTimeout(function(){ reload_info(interval); }, interval);
 

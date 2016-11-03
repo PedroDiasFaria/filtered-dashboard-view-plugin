@@ -292,10 +292,34 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     /********/
     /** Views Inside View functions **/
 
-    @Exported(name="allViews")
+    /*
+    * Create another return function that gets a structured view of each project(view)
+    *
+    * */
+
     public Collection<View> getViews(){
-        //return viewGroupMixIn.getViews();
         return Jenkins.getInstance().getViews();
+    }
+
+    @Exported(name="allProjects")
+    public Collection<Project> getProjects(){
+
+        List<View> views = new ArrayList<View>(getViews());
+        ArrayList<Project> allProjects = new ArrayList<>();
+
+        //Get name of view
+        for(View v : views){
+            if(v.getDisplayName().equals("All") ||
+               v.getDisplayName().equals(this.getDisplayName()))
+                continue;
+            else{
+                        //Project(String name, String url, ArrayList<JobStatus> jobs, String status) //
+                //need to create jobs array
+                //TODO http://stackoverflow.com/questions/30862373/find-view-name-from-jenkins-gui-given-the-job-details !!!!!!!!!!
+                allProjects.add(new Project(v.getDisplayName(), v.getUrl(), null, "NOTBUILT"));
+            }
+        }
+        return allProjects;
     }
     /********/
 
@@ -489,6 +513,25 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
         public void setValue(String value){
             this.value = value;
+        }
+    }
+
+    @ExportedBean(defaultVisibility = 999)
+    public class Project{
+        @Exported
+        public String projectName; //will be the view name
+        @Exported
+        public String projectUrl; //view url
+        @Exported
+        public ArrayList<JobStatus> projectJobs;
+        @Exported
+        public String projectStatus;
+
+        Project(String name, String url, ArrayList<JobStatus> jobs, String status){
+            this.projectName = name;
+            this.projectUrl = url;
+            this.projectJobs = jobs;
+            this.projectStatus = status;
         }
     }
 

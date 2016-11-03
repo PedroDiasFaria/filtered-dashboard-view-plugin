@@ -161,8 +161,45 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
 function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
 
     $.getJSON( viewUrl + '/api/json', function(data){
-        $.each(data.views, function(key, val){
-            console.log("VIEWS: " + val);
+        $(divSelector + ' button').remove();
+        $.each(data.allProjects, function(key, val){
+            //get jobs from view:   val.name
+
+          switch (val.projectName) {
+            case 'SUCCESS':
+              classes = 'btn-success';
+              break;
+            case 'FAILURE':
+              classes = 'btn-danger';
+              break;
+            case 'ABORTED':
+            case 'UNSTABLE':
+              classes = 'btn-warning';
+              break;
+            case 'NOTBUILT':
+              classes = 'invert-text-color';
+              break;
+            case 'BUILDING':
+              classes = 'btn-info invert-text-color';
+              break;
+
+            //REMOVE ALL AND THIS.NAME
+            case 'All':
+              classes = 'btn-warning'
+              break;
+
+            default:
+              classes = 'btn-primary';
+          }
+
+          newDiv =
+          '<button id="' + val.projectName + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.projectName + '</p>' +
+              //'<p><a class="goTo" href="' + val.url + '">' + '(Open Project)' + '</a></p>' +
+          '</button>';
+
+          $(divSelector).append(newDiv);
+
+           console.log("VIEWS: " + val.projectName);
         });
     });
     console.log("views_statuses");
