@@ -1,5 +1,11 @@
 package org.synopsys.plugins.synopsysdashboardview;
 
+import com.sonyericsson.hudson.plugins.metadata.model.MetadataJobProperty;
+import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
+import com.sonyericsson.hudson.plugins.metadata.model.values.StringMetadataValue;
+import com.sonyericsson.hudson.plugins.metadata.search.MetadataQuerySearch;
+import com.sonyericsson.hudson.plugins.metadata.search.MetadataViewJobFilter;
+import com.sonyericsson.hudson.plugins.metadata.search.antlr.QueryWalker;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
@@ -19,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +40,10 @@ import hudson.views.ViewsTabBar;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 import static hudson.Util.fixEmpty;
+
+import com.sonyericsson.hudson.plugins.metadata.*;
+
+//Metadata
 
 /**
  * Created by faria on 10-Oct-16.
@@ -426,7 +437,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         String status, name;
 
         /********/
-        String url;
+        String url = "";
+        String buildUrl = "";
+        String metadata = "";
         int lastBuildNr = 0;
         /********/
         Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
@@ -443,16 +456,27 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
             // Get the url to link it in the dashboard
             url = j.getUrl();
+
             if (j.isBuilding()) {
                 status = "BUILDING";
+                metadata = "BUILDING";
+                buildUrl = "BUILDING";
             } else {
                 Run lb = j.getLastBuild();
                 if (lb == null) {
                     status = "NOTBUILT";
                     lastBuildNr = 0;
+                    buildUrl = lb.getUrl();
+
+                    //metadata = lb.getDescription();
+
                 } else {
                     status = lb.getResult().toString();
                     lastBuildNr = j.getLastBuild().getNumber();
+                    buildUrl = lb.getUrl();
+
+
+                    //metadata = lb.getDescription();
                 }
             }
 
@@ -463,11 +487,11 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 name = j.getName();
             }
 
+
+
             String dir = j.getBuildDir().toString();
 
-           // JobData jobData = new JobData(dir, Integer.toString(lastBuildNr));
-
-            statuses.add(new JobStatus(name, status, url, dir, Integer.toString(lastBuildNr)));
+            statuses.add(new JobStatus(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, metadata));
         }
 
         return statuses;
@@ -487,13 +511,19 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         public JobData Dir = new JobData("Directory", "", "expandable");
         @Exported
         public JobData LastBuildNr = new JobData("Last Build", "", "expandable");
+        @Exported
+        public JobData LastBuildUrl = new JobData("Last Build URL", "", "expandable");
+        @Exported
+        public JobData Metadata = new JobData("Metadata", "", "expandable");
 
-        public JobStatus(String jobName, String status, String jobUrl, String dir, String lastBuildNr) {
+        public JobStatus(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, String metadata) {
             this.JobName.setValue(jobName);
             this.Status.setValue(status);
             this.JobURL.setValue(jobUrl);
             this.Dir.setValue(dir);
             this.LastBuildNr.setValue(lastBuildNr);
+            this.LastBuildUrl.setValue(lastBuildUrl);
+            this.Metadata.setValue(metadata);
         }
     }
 

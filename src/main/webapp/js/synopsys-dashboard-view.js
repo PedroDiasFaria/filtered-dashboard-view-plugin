@@ -153,6 +153,7 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
 
       '</button>';
 
+        console.log(val.Metadata.value);
       $(divSelector).append(newDiv);
     });
   });
@@ -199,7 +200,7 @@ function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
 
           $(divSelector).append(newDiv);
 
-           console.log("VIEWS: " + val.projectName);
+           //console.log("VIEWS: " + val.projectName);
         });
     });
     console.log("views_statuses");
