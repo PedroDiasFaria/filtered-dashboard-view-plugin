@@ -29,7 +29,7 @@
                     <span class="glyphicon glyphicon-cog"></span>
                 </div>
             </a>
-            <div class="container-fluid height100perc">
+            <div class="container-fluid height100perc" id="main-dashboard">
                 <!-- Left half -->
                 <div class="col-lg-6 right-border height100perc">
                     <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
@@ -76,6 +76,9 @@
                     </div>
 
                 </div>
+            </div>
+            <div class="container-fluid height100perc" id="project-container" style="display: none;">
+                <div><h4>PROJECT CONTAINER HERE</h4></div>
             </div>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>

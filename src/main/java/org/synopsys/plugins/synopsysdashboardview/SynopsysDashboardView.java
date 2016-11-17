@@ -4,6 +4,7 @@ import com.sonyericsson.hudson.plugins.metadata.model.MetadataJobProperty;
 import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
 import com.sonyericsson.hudson.plugins.metadata.model.values.StringMetadataValue;
 import com.sonyericsson.hudson.plugins.metadata.search.MetadataQuerySearch;
+import com.sonyericsson.hudson.plugins.metadata.search.MetadataSearchPage;
 import com.sonyericsson.hudson.plugins.metadata.search.MetadataViewJobFilter;
 import com.sonyericsson.hudson.plugins.metadata.search.antlr.QueryWalker;
 import hudson.Extension;
@@ -40,8 +41,6 @@ import hudson.views.ViewsTabBar;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 import static hudson.Util.fixEmpty;
-
-import com.sonyericsson.hudson.plugins.metadata.*;
 
 //Metadata
 
@@ -327,10 +326,17 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                         //Project(String name, String url, ArrayList<JobStatus> jobs, String status) //
                 //need to create jobs array
                 //TODO http://stackoverflow.com/questions/30862373/find-view-name-from-jenkins-gui-given-the-job-details !!!!!!!!!!
-                allProjects.add(new Project(v.getDisplayName(), v.getUrl(), null, "NOTBUILT"));
+                allProjects.add(new Project(v.getDisplayName(), v.getUrl(), null, "SUCCESS"));
             }
         }
         return allProjects;
+    }
+
+    @Exported(name="getProject")
+    public Project getProject(String projectName){
+        Project project = new Project(projectName, null, null, null);
+
+        return project;
     }
     /********/
 
@@ -362,7 +368,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     /********/
 
     @Exported(name="builds")
-    public Collection<Build> getBuildHistory() {
+    public ArrayList<Build> getBuildHistory() {
         List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
         RunList builds = new RunList(jobs).limit(getBuildsLimit);
         ArrayList<Build> l = new ArrayList<Build>();
@@ -490,8 +496,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
 
             String dir = j.getBuildDir().toString();
+            ArrayList<Build> builds = getBuildHistory();
 
-            statuses.add(new JobStatus(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, metadata));
+            statuses.add(new JobStatus(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, metadata, builds));
         }
 
         return statuses;
@@ -515,15 +522,18 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         public JobData LastBuildUrl = new JobData("Last Build URL", "", "expandable");
         @Exported
         public JobData Metadata = new JobData("Metadata", "", "expandable");
+        @Exported
+        public ArrayList<Build> Builds = new ArrayList<Build>();
 
-        public JobStatus(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, String metadata) {
+        public JobStatus(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, String metadata, ArrayList<Build> builds) {
             this.JobName.setValue(jobName);
             this.Status.setValue(status);
-            this.JobURL.setValue(jobUrl);
+            this.JobURL.setValue("../../" + jobUrl);            //jenkinsHome/...
             this.Dir.setValue(dir);
-            this.LastBuildNr.setValue(lastBuildNr);
-            this.LastBuildUrl.setValue(lastBuildUrl);
+            this.LastBuildNr.setValue("../../" + lastBuildNr);             //jenkinsHome/...
+            this.LastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
             this.Metadata.setValue(metadata);
+            this.Builds = builds;
         }
     }
 
@@ -559,7 +569,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
         Project(String name, String url, ArrayList<JobStatus> jobs, String status){
             this.projectName = name;
-            this.projectUrl = url;
+            this.projectUrl = "../../" + url; //jenkinsHome/...
             this.projectJobs = jobs;
             this.projectStatus = status;
         }
@@ -567,3 +577,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     /*************************/
 }
+
+
+//TODO: Refactor everything
+//TODO: getProjects(), getProject(projectName)
+//TODO: getJobs(), getJob(name)
+//TODO: getBuilds(), getBuilds(jobName)

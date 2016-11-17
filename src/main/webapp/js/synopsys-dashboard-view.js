@@ -166,7 +166,7 @@ function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
         $.each(data.allProjects, function(key, val){
             //get jobs from view:   val.name
 
-          switch (val.projectName) {
+          switch (val.projectStatus) {
             case 'SUCCESS':
               classes = 'btn-success';
               break;
@@ -193,15 +193,86 @@ function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
               classes = 'btn-primary';
           }
 
-          newDiv =
+         var newDiv =
           '<button id="' + val.projectName + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.projectName + '</p>' +
-              //'<p><a class="goTo" href="' + val.url + '">' + '(Open Project)' + '</a></p>' +
+
+              '<p class="btn btn-warning" id="' + val.projectName+ '_btn">Expand Project</p>' +
+              '<p ><a class="goTo" href="' + val.projectUrl + '">' + '(Go To Project)' + '</a></p>' +
+
           '</button>';
 
+           //newDiv.onclick = function() { alert('blah'); };//open_project('#main-dashboard', val.projectUrl, val.projectName);
+
           $(divSelector).append(newDiv);
+
+          var openProjectBtn = document.getElementById(val.projectName+'_btn');
+
+          openProjectBtn.addEventListener("click", function(e){
+            open_project('#main-dashboard', viewUrl, val.projectName);
+          }, false);
 
            //console.log("VIEWS: " + val.projectName);
         });
     });
-    console.log("views_statuses");
 }
+
+function open_project(divSelector, viewUrl, projectName){
+
+    $.getJSON( viewUrl + '/api/json', function(data){
+        //$(divSelector).remove();
+
+        var main_dashboard = document.getElementById('main-dashboard');
+        main_dashboard.style.display = 'none';
+
+        var project_container = document.getElementById('project-container');
+        project_container.style.display = 'block';
+
+        project_container_id = projectName + '_project_container';
+
+        goBackBtn = '<a id="goBackBtn">Go Back</a>';
+
+        filler = "";
+
+                    for(var i=0; i<10; i++){
+                        filler+= '<button class="btn btn-warning">' + i + '</button></br>';
+                    }
+
+
+        project_container_div =
+        '<div id="'+ project_container_id +'">' +
+        '<button class="btn FAILURE"><h4>' + projectName + ' project will be on this big container</h4>'+
+            filler +
+        '</button>' + goBackBtn +
+        '</div>';
+
+
+        $(project_container).append(project_container_div);
+
+        var gBB = document.getElementById('goBackBtn'); //goBackBtn listener
+        var projectDiv = document.getElementById(project_container_id);
+
+          gBB.addEventListener("click", function(e){
+            restore_dashboard();
+            project_container.style.display = 'none';
+
+            projectDiv.remove();
+
+            this.remove();
+
+           console.log('Removed all from project_container');
+
+          }, false);
+
+
+    });
+    console.log("open_project finish");
+}
+
+function restore_dashboard(){
+    var main_dashboard = document.getElementById('main-dashboard');
+    main_dashboard.style.display = 'block';
+
+    console.log("dashboard restored");
+}
+
+//TODO: create the project container with all relevant info
