@@ -103,11 +103,11 @@ function reload_jenkins_build_history(tableSelector, viewUrl, buildHistorySize) 
   });
 }
 
-function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
+function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
   $.getJSON( viewUrl + '/api/json', function( data ) {
     // Remove all existing divs
     $(divSelector + ' button').remove();
-    $.each( data.allJobsStatuses, function( key, val ) {
+    $.each( data.allJobs, function( key, val ) {
       switch (val.Status.value) {
         case 'SUCCESS':
           classes = 'btn-success';
@@ -143,7 +143,7 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
 
       newDiv =
       '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
-          '<p><a class="goTo" href="' + val.JobURL.value + '">' + '(Go To Project)' + '</a></p>' +
+          '<p><a class="goTo" href="' + val.JobURL.value + '">' + '(Go To Job)' + '</a></p>' +
 
         //  '<a class="pull-left btn btn-primary" data-toggle="collapse" data-target="expandable_'+val.JobName.value+'">Expand+</a>'+
 
@@ -159,10 +159,11 @@ function reload_jenkins_job_statuses(divSelector, viewUrl, buttonClass) {
   });
 }
 
-function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
+function reload_jenkins_projects(divSelector, viewUrl, buttonClass){
 
     $.getJSON( viewUrl + '/api/json', function(data){
         $(divSelector + ' button').remove();
+
         $.each(data.allProjects, function(key, val){
             //get jobs from view:   val.name
 
@@ -208,7 +209,7 @@ function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
           var openProjectBtn = document.getElementById(val.projectName+'_btn');
 
           openProjectBtn.addEventListener("click", function(e){
-            open_project('#main-dashboard', viewUrl, val.projectName);
+            open_project('#main-dashboard', viewUrl, val);
           }, false);
 
            //console.log("VIEWS: " + val.projectName);
@@ -216,18 +217,16 @@ function reload_jenkins_views_statuses(divSelector, viewUrl, buttonClass){
     });
 }
 
-function open_project(divSelector, viewUrl, projectName){
+function open_project(divSelector, viewUrl, project){
 
-    $.getJSON( viewUrl + '/api/json', function(data){
         //$(divSelector).remove();
 
-        var main_dashboard = document.getElementById('main-dashboard');
-        main_dashboard.style.display = 'none';
+        hide_dashboard();
 
         var project_container = document.getElementById('project-container');
         project_container.style.display = 'block';
 
-        project_container_id = projectName + '_project_container';
+        project_container_id = project.projectName + '_project_container';
 
         goBackBtn = '<a id="goBackBtn">Go Back</a>';
 
@@ -237,12 +236,16 @@ function open_project(divSelector, viewUrl, projectName){
                         filler+= '<button class="btn btn-warning">' + i + '</button></br>';
                     }
 
+        var json = JSON.stringify(project, null, 4);
+        console.log(json);
 
         project_container_div =
         '<div id="'+ project_container_id +'">' +
-        '<button class="btn FAILURE"><h4>' + projectName + ' project will be on this big container</h4>'+
+        '<div class="btn btn-danger"><h4>' + project.projectName + ' project will be on this big container</h4>'+
             filler +
-        '</button>' + goBackBtn +
+        '</div>' +
+        '<div>' + json + '</div>' +
+        '<br>' + goBackBtn +
         '</div>';
 
 
@@ -264,8 +267,14 @@ function open_project(divSelector, viewUrl, projectName){
           }, false);
 
 
-    });
     console.log("open_project finish");
+}
+
+function hide_dashboard(){
+    var main_dashboard = document.getElementById('main-dashboard');
+    main_dashboard.style.display = 'none';
+
+    console.log("dashboard hidden");
 }
 
 function restore_dashboard(){
@@ -275,4 +284,15 @@ function restore_dashboard(){
     console.log("dashboard restored");
 }
 
+function getProjectByName(data, projectName) {
+    var allProjects = data.allProjects;
+    for (var i = 0; i < allProjects.length; i++) {
+        if (allProjects[i].projectName == projectName) {
+            return(allProjects[i]);
+        }
+    }
+}
+
 //TODO: create the project container with all relevant info
+//TODO: searches are all in js
+//TODO: create a good architecture, and remove build limit, or put a build limit only for display

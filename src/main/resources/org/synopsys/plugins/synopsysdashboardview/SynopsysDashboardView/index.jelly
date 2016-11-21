@@ -97,14 +97,14 @@
 
                 function reload_info (interval) {
                     reload_jenkins_build_history('#jenkinsBuildHistory', jenkinsUrl + '/${it.url}', buildHistorySize);
-                    reload_jenkins_job_statuses('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);
+                    reload_jenkins_jobs('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);
                     reload_jenkins_build_queue('#jenkinsBuildQueue', jenkinsUrl, buildQueueSize);
 
 
                     <!--reload_jenkins_node_statuses('#jenkinsNodeStatuses', jenkinsUrl, nodeStatuses, buttonClass);-->
 
                     <!-- Views container instead of jobs -->
-                    reload_jenkins_views_statuses('#jenkinsViewsStatuses', jenkinsUrl + '/${it.url}', buttonClass);
+                    reload_jenkins_projects('#jenkinsViewsStatuses', jenkinsUrl + '/${it.url}', buttonClass);
 
                     setTimeout(function(){ reload_info(interval); }, interval);
 
