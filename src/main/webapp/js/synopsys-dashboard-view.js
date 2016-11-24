@@ -353,6 +353,4 @@ var tableClass = function(){
     this.rows = [];
 }
 
-
 //http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
-//remove bootgrid
