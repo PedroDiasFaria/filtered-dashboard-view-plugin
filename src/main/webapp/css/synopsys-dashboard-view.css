@@ -28,15 +28,15 @@ th, td {
   font-size: 14px;
 }
 
-.btn-success , .SUCCESS{
+.btn-success{
   background-color: #2f6a2f;
 }
 
-.btn-danger, .table>tbody>tr.danger>td , .FAILURE{
+.btn-danger, .table>tbody>tr.danger>td{
   background-color: #bd2d29;
 }
 
-.btn-warning, .table>tbody>tr.warning>td , .UNSTABLE{
+.btn-warning, .table>tbody>tr.warning>td {
   background-color: #d38312;
 }
 
@@ -69,13 +69,25 @@ th, td {
     text-overflow:ellipsis;
 }
 
-.table-hover tbody td:hover
+
+.project-table>tbody>tr>td:hover, .project-table>thead>tr>th:hover
 {
-    border-width: 2px;
-    border-color: purple;
+    box-shadow: inset 0 0 0 3px gray;
+}
+/*
+.project-table>tbody>tr>td, .project-table>tbody>tr>th, .project-table>thead>tr>th{
+    border-top: 0;
+    border-color:#d2d2d2;
+}*/
+
+.FAILURE{
+    background-color: #bd2d29;
 }
 
-.table-hover tbody td{
-  border-width: 2px;
-  border-color: white;
+.UNSTABLE{
+    background-color: #d38312;
+}
+
+.SUCCESS{
+    background-color: #2f6a2f;
 }
