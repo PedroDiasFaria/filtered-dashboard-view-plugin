@@ -78,7 +78,6 @@
                 </div>
             </div>
             <div class="container-fluid height100perc" id="project-container" style="display: none;">
-                <div><h4>PROJECT CONTAINER HERE</h4></div>
             </div>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>

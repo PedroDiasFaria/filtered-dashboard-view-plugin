@@ -143,7 +143,7 @@ function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
 
       newDiv =
       '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
-          '<p><a class="goTo" href="' + val.JobURL.value + '">' + '(Go To Job)' + '</a></p>' +
+          '<p><a class="goTo" href="' + val.JobUrl.value + '">' + '(Go To Job)' + '</a></p>' +
 
         //  '<a class="pull-left btn btn-primary" data-toggle="collapse" data-target="expandable_'+val.JobName.value+'">Expand+</a>'+
 
@@ -153,7 +153,6 @@ function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
 
       '</button>';
 
-        console.log(val.Metadata.value);
       $(divSelector).append(newDiv);
     });
   });
@@ -230,25 +229,72 @@ function open_project(divSelector, viewUrl, project){
 
         goBackBtn = '<a id="goBackBtn">Go Back</a>';
 
-        filler = "";
+        //populate the table
+        //there can be rows(builds) without any value for its job
+        var projectTable = new tableClass();
 
-                    for(var i=0; i<10; i++){
-                        filler+= '<button class="btn btn-warning">' + i + '</button></br>';
+        for(let job of project.projectJobs){
+            newCol = {jobName : "", url: ""};
+            newCol.jobName = job.JobName.value;
+            newCol.url = job.JobName.value;
+            projectTable.columns.push(newCol);
+            for(let build of job.Builds){
+                newCell = {url : "", result : "", jobName : ""};
+                newCell.url = build.buildUrl;
+                newCell.result = build.result;
+                newCell.jobName = job.JobName.value;
+                if(projectTable.rows['#' + build.number])
+                    projectTable.rows['#' + build.number].push(newCell);
+                else{
+                    projectTable.rows['#' + build.number] = [];
+                    projectTable.rows['#' + build.number].push(newCell);
                     }
+            }
+        }
 
-        var json = JSON.stringify(project, null, 4);
-        console.log(json);
+        var thead = "";
+        var tbody = "";
+
+        for(let column of projectTable.columns){
+            thead+='<th><a href="'+ column.url +'" target="_blank" style="text-decoration: none">' + column.jobName + '</a></th>';
+        }
+
+        console.log(projectTable.rows);
+        for(var buildNr in projectTable.rows){
+            tbody+= '<tr><th class="text-left" scope="row">' + buildNr + '</th>';
+
+            for(let column of projectTable.columns){
+                rowArray = projectTable.rows[buildNr];
+                newCell = "";
+                    for(let cell of rowArray){
+                        if(cell.jobName == column.jobName ){
+                            newCell= '<td class="' + cell.result + '"><a href="'+ cell.url +'" target="_blank">' + cell.result+ '</a></td>';
+                        }
+                    }
+                if(newCell){
+                    tbody+=newCell;
+                }else{
+                    tbody+= '<td> NO DATA </td>';
+                }
+            }
+            tbody+= '</tr>';
+        }
 
         project_container_div =
         '<div id="'+ project_container_id +'">' +
-        '<div class="btn btn-danger"><h4>' + project.projectName + ' project will be on this big container</h4>'+
-            filler +
-        '</div>' +
-        '<div>' + json + '</div>' +
+        '<div><h4>' + project.projectName + '<strong></h4></div>' +
+            '<table class="table table-bordered table-striped table-hover">' +
+                '<thead>'+
+                    '<tr><th class="text-left"><strong>Build # / Job</strong></th>' + thead + '</tr>'+
+                '</thead>'+
+                '<tbody>'+
+                    tbody +
+                '<tbody>'+
+            '</table>' +
         '<br>' + goBackBtn +
         '</div>';
 
-
+        //console.log(project_container_div);
         $(project_container).append(project_container_div);
 
         var gBB = document.getElementById('goBackBtn'); //goBackBtn listener
@@ -293,6 +339,12 @@ function getProjectByName(data, projectName) {
     }
 }
 
-//TODO: create the project container with all relevant info
-//TODO: searches are all in js
-//TODO: create a good architecture, and remove build limit, or put a build limit only for display
+var tableCell = function(url, status){
+    this.url = url;
+    this.status = status;
+}
+
+var tableClass = function(){
+    this.columns = [];
+    this.rows = [];
+}

@@ -71,6 +71,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private ArrayList<Project> allProjects = new ArrayList<>();
     private ArrayList<JobData> allJobs = new ArrayList<>();
     private ArrayList<Build> allBuilds = new ArrayList<>();
+    private int projectBuildTableSize;
     /******/
     @DataBoundConstructor
     public SynopsysDashboardView(String name, String viewName) {
@@ -87,6 +88,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.layoutHeightRatio = "6040";
         this.filterRegex = null;
         /**************/
+
+        this.projectBuildTableSize = 15;
     }
 
     @Override
@@ -105,6 +108,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.buildHistorySize = json.getInt("buildHistorySize");
         this.buildQueueSize = json.getInt("buildQueueSize");
         this.useCondensedTables = json.getBoolean("useCondensedTables");
+        this.projectBuildTableSize = json.getInt("projectBuildTableSize");
         if (json.get("useRegexFilter") != null ) {
             String regexToTest = req.getParameter("filterRegex");
             try {
@@ -156,6 +160,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         if (layoutHeightRatio == null)
             layoutHeightRatio = "6040";
 
+        if (projectBuildTableSize == 0)
+            projectBuildTableSize = 15;
+
         /*ViewGruopMix in and sets primary view*/
         if (views == null) {
             views = new CopyOnWriteArrayList<View>();
@@ -197,6 +204,10 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public int getBuildQueueSize() {
         return buildQueueSize;
+    }
+
+    public int getProjectBuildTableSize() {
+        return projectBuildTableSize;
     }
 
     public boolean isUseCondensedTables() {
@@ -373,10 +384,15 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public ArrayList<Build> getBuildsFromJob(Job job){
         ArrayList<Build> builds = new ArrayList<>();
+        int size = 0;
 
         for(Object b : job.getBuilds()){
-            Run build = (Run)b;
-            builds.add(getBuildByName(build.getFullDisplayName()));
+            if(size < getProjectBuildTableSize()) {
+                Run build = (Run) b;
+                builds.add(getBuildByName(build.getFullDisplayName()));
+            }else
+                break;
+            size++;
         }
         return builds;
     }
@@ -521,15 +537,15 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         @Exported
         public String result;
         @Exported
-        public String jobUrl;
+        public String buildUrl;
 
-        public Build(String jobName, String buildName, int number, long startTime, long duration, String jobUrl, String result) {
+        public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result) {
             this.jobName = jobName;
             this.buildName = buildName;
             this.number = number;
             this.startTime = startTime;
             this.duration = duration;
-            this.jobUrl = jobUrl;
+            this.buildUrl = "../../" + buildUrl;
             this.result = result;
         }
     }
@@ -541,7 +557,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         @Exported
         public JobVar Status = new JobVar("Status", "", "");
         @Exported
-        public JobVar JobURL = new JobVar("URL", "", "");
+        public JobVar JobUrl = new JobVar("URL", "", "");
         @Exported
         public JobVar Dir = new JobVar("Directory", "", "expandable");
         @Exported
@@ -556,7 +572,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         public JobData(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, String metadata, ArrayList<Build> builds) {
             this.JobName.setValue(jobName);
             this.Status.setValue(status);
-            this.JobURL.setValue("../../" + jobUrl);            //jenkinsHome/...
+            this.JobUrl.setValue("../../" + jobUrl);            //jenkinsHome/...
             this.Dir.setValue(dir);
             this.LastBuildNr.setValue("../../" + lastBuildNr);             //jenkinsHome/...
             this.LastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
@@ -622,3 +638,4 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 //TODO: Refactor everything
 //TODO: maybe remove visibility? don't want duplicates of JobVar, jobs within projects, builds within jobs etc
 //TODO: create a var for each list of job, build and project instead of always creating new ones
+//TODO: check buildUrl !
