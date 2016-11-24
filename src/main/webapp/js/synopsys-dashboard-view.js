@@ -143,14 +143,10 @@ function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
 
       newDiv =
       '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
-          '<p><a class="goTo" href="' + val.JobUrl.value + '">' + '(Go To Job)' + '</a></p>' +
-
-        //  '<a class="pull-left btn btn-primary" data-toggle="collapse" data-target="expandable_'+val.JobName.value+'">Expand+</a>'+
-
             '<div id="expandable_'+val.JobName.value+'" class="">' +
                 expandable +
             '</div>' +
-
+          '<p><a class="goTo" href="' + val.JobUrl.value + '">' + '(Go To Job)' + '</a></p>' +
       '</button>';
 
       $(divSelector).append(newDiv);
@@ -195,13 +191,9 @@ function reload_jenkins_projects(divSelector, viewUrl, buttonClass){
 
          var newDiv =
           '<button id="' + val.projectName + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.projectName + '</p>' +
-
-              '<p class="btn btn-warning" id="' + val.projectName+ '_btn">Expand Project</p>' +
+              '<p class="btn" id="' + val.projectName+ '_btn">Expand Project</p>' +
               '<p ><a class="goTo" href="' + val.projectUrl + '">' + '(Go To Project)' + '</a></p>' +
-
           '</button>';
-
-           //newDiv.onclick = function() { alert('blah'); };//open_project('#main-dashboard', val.projectUrl, val.projectName);
 
           $(divSelector).append(newDiv);
 
@@ -218,8 +210,6 @@ function reload_jenkins_projects(divSelector, viewUrl, buttonClass){
 
 function open_project(divSelector, viewUrl, project){
 
-        //$(divSelector).remove();
-
         hide_dashboard();
 
         var project_container = document.getElementById('project-container');
@@ -227,7 +217,7 @@ function open_project(divSelector, viewUrl, project){
 
         project_container_id = project.projectName + '_project_container';
 
-        goBackBtn = '<a id="goBackBtn">Go Back</a>';
+        goBackBtn = '<button class="btn btn-default btn-sm" id="goBackBtn">Go Back</button>';
 
         //populate the table
         //there can be rows(builds) without any value for its job
@@ -256,25 +246,25 @@ function open_project(divSelector, viewUrl, project){
         var tbody = "";
 
         for(let column of projectTable.columns){
-            thead+='<th><a href="'+ column.url +'" target="_blank" style="text-decoration: none">' + column.jobName + '</a></th>';
+            thead+='<th class=""><h4><a href="'+ column.url +'" target="_blank" style="text-decoration: none">' + column.jobName + '</a></h4></th>';
         }
 
         console.log(projectTable.rows);
         for(var buildNr in projectTable.rows){
-            tbody+= '<tr><th class="text-left" scope="row">' + buildNr + '</th>';
+            tbody+= '<tr><th class="text-left col-md-1" scope="row">' + buildNr + '</th>';
 
             for(let column of projectTable.columns){
                 rowArray = projectTable.rows[buildNr];
                 newCell = "";
                     for(let cell of rowArray){
                         if(cell.jobName == column.jobName ){
-                            newCell= '<td class="' + cell.result + '"><a href="'+ cell.url +'" target="_blank">' + cell.result+ '</a></td>';
+                            newCell= '<td class="' + cell.result + '"><a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div></a></td>';
                         }
                     }
                 if(newCell){
                     tbody+=newCell;
                 }else{
-                    tbody+= '<td> NO DATA </td>';
+                    tbody+= '<td class=""> NO DATA </td>';
                 }
             }
             tbody+= '</tr>';
@@ -282,12 +272,12 @@ function open_project(divSelector, viewUrl, project){
 
         project_container_div =
         '<div id="'+ project_container_id +'">' +
-        '<div><h4>' + project.projectName + '<strong></h4></div>' +
-            '<table class="table table-bordered table-striped table-hover">' +
-                '<thead>'+
-                    '<tr><th class="text-left"><strong>Build # / Job</strong></th>' + thead + '</tr>'+
+        '<div><h1>' + project.projectName + '<strong></h1></div>' +
+            '<table class="project-table table table-bordered table-striped table-hover">' +
+                '<thead class="">'+
+                    '<tr><th class="text-left col-md-1"><h4>Build # / Job</h4></th>' + thead + '</tr>'+
                 '</thead>'+
-                '<tbody>'+
+                '<tbody class="">'+
                     tbody +
                 '<tbody>'+
             '</table>' +
@@ -339,6 +329,11 @@ function getProjectByName(data, projectName) {
     }
 }
 
+var createTable = function(){
+
+
+}
+
 var tableCell = function(url, status){
     this.url = url;
     this.status = status;
@@ -348,3 +343,5 @@ var tableClass = function(){
     this.columns = [];
     this.rows = [];
 }
+
+//http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
