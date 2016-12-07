@@ -13,15 +13,23 @@
 
             <!-- Extra bootstrap functions -->
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"></link>
             <!-- Bootstrap -->
             <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
             <!-- Snps Dashboard -->
             <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/synopsys-dashboard-view.css" type="text/css" rel="stylesheet" />
 
             <!-- DataTables -->
-            <link href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" type="text/css" rel="stylesheet"/>
-            <link href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" type="text/css" rel="stylesheet"/>
+
+            <!--
+            -->
+            <link href="https://cdn.datatables.net/1.10.13/css/dataTables.bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" type="text/css" rel="stylesheet" />
+
+
+            <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+            <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+            <script src="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap4.min.js"></script>
 
             <style>
                 body, th, td, button.btn { font-size: ${it.fontSize}px; }
@@ -86,9 +94,6 @@
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/synopsys-dashboard-view.js"></script>
 
-
-            <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-             <script src="https://cdn.datatables.net/1.10.12/js/dataTables.jqueryui.min.js"></script>
 
             <script type="text/javascript">
                 var jenkinsUrl = '${rootURL}';

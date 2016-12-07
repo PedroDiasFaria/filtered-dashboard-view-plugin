@@ -218,20 +218,34 @@ function open_project(divSelector, viewUrl, project){
         goBackBtn = '<button class="btn btn-default btn-sm" id="goBackBtn">Go Back</button>';
 
         var projectTable = createTable(project.projectJobs);
+        var projectTags = createTags(project.projectJobs);
+        var tagsFilter = createTagsFilter(projectTags);
 
         project_container_div =
         '<div id="'+ project_container_id +'">' +
-        '<div><h1>' + project.projectName + '<strong></h1></div>' +
-        projectTable+
-        '<br>' + goBackBtn +
+        '<div><h1><strong>' + project.projectName + '</strong></h1></div>' +
+        '<br><div class="container col-sm-12">' + tagsFilter + '</div>' +
+        '<br><div class="container col-sm-12">' + projectTable + '</div>' +
+        '<br><div class="container col-sm-12">' + goBackBtn +  '</div>' +
         '</div>';
 
         $(project_container).append(project_container_div);
-        $('#project-table').DataTable({
+        var table = $('#project-table').DataTable({
             "order" : [0, 'desc'],
+            "sPaginationType": 'full_numbers',
             "aoColumnDefs" : [
                 { 'bSortable': false, 'aTargets': ['no-sort'] }
             ]
+        });
+        $('input.filter').on('change', function () {
+            var filter = [];
+            $('.filter').each(function (index, elem) {
+                if (elem.checked) filter.push($(elem).val());
+            });
+            var filterString = filter.join(' ');
+            console.log(filterString);
+            table.search(filterString).draw();
+            table.search('');                   //clears the 'search' form
         });
 
         var gBB = document.getElementById('goBackBtn'); //goBackBtn listener
@@ -288,10 +302,11 @@ var createTable = function(projectJobs){
             newCol.url = job.JobUrl.value;
             projectTable.columns.push(newCol);
             for(let build of job.Builds){
-                newCell = {url : "", result : "", jobName : ""};
+                newCell = {url : "", result : "", jobName : "", tags : ""};
                 newCell.url = build.buildUrl;
                 newCell.result = build.result;
                 newCell.jobName = job.JobName.value;
+                newCell.tags = build.Tags;
                 if(projectTable.rows[build.number])
                     projectTable.rows[build.number].push(newCell);
                 else{
@@ -316,7 +331,13 @@ var createTable = function(projectJobs){
                     newCell = "";
                     for(let cell of rowArray){
                         if(cell.jobName == column.jobName ){
-                            newCell= '<td class="cell ' + cell.result + '"><a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div></a></td>';
+                            newCell= '<td class="cell ' + cell.result + '">';
+                            newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
+                            newCell+= '<span class="callTags" style="display:none">';
+                            for(let tag of cell.tags){
+                                newCell+= tag.value + ' ';
+                            }
+                            newCell+= '</span></a></td>';
                         }
                     }
                     if(newCell){
@@ -331,7 +352,7 @@ var createTable = function(projectJobs){
 
 //table table-bordered table-striped table-hover
 
-        table =             '<table id="project-table" class="project-table display" cellspacing="0" width="100%">' +
+        table =             '<table id="project-table" class="project-table table table-striped table-bordered" cellspacing="0" width="100%">' +
                                 '<thead>'+
                                     '<tr><th style="width: 3%" class="text-left "><h4>Build # / Job</h4></th>' + thead + '</tr>'+
                                 '</thead>'+
@@ -341,6 +362,53 @@ var createTable = function(projectJobs){
                             '</table>';
 
         return table;
+}
+
+var createTags = function(projectJobs){
+
+    var tags = new Array();
+
+    for(let job of projectJobs){
+        for(let build of job.Builds){
+            for(let tag of build.Tags){
+                if(!tags.hasOwnProperty(tag.label)){
+                    tags[tag.label] = [];
+                }
+                if(tags[tag.label].indexOf(tag.value) === -1){
+                    tags[tag.label].push(tag.value);
+                }
+            }
+        }
+    }
+    return tags;
+}
+
+var createTagsFilter = function(tags){
+
+    var tagsDiv = '<div class="container col-xs-12 col-sm-6 col-md-2" id="tagsDiv" ><h3><b>Filter by:</b></h3>';
+
+    for(var tag in tags){
+        if(tags.hasOwnProperty(tag)){
+            tagsDiv+= '<div class="container" style="max-width: 200px; float:left; background-color:pink; border:2px solid red"><h4><b>' + tag + '</b></h4>';
+            tagsDiv+= '<ul class="list-group">';
+            values = tags[tag];
+                for(let value of values){
+                   id = tag +'_'+ value;
+                    tagsDiv+= '<li class="list-group-item">';
+                        tagsDiv+= value;
+                        tagsDiv+= '<div class="material-switch pull-right">';
+                            tagsDiv+= '<input id="'+ id +'" type="checkbox" class="filter" value="' + value + '" name="'+ id +'"/>' ;
+                            tagsDiv+= '<label for="' + id + '" class="label-primary"></label>';
+                        tagsDiv+= '<div>';
+                    tagsDiv+= '</li>';
+              }
+            tagsDiv+='</ul></div>';
+        }
+    }
+
+
+    tagsDiv+= tags + '</div>';
+    return tagsDiv;
 }
 
 var tableCell = function(url, status){
@@ -354,3 +422,4 @@ var tableClass = function(){
 }
 
 //http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
+//TODO remove projects In project table variable

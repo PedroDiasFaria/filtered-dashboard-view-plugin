@@ -369,13 +369,21 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 continue;
 
             Result result = build.getResult();
+
+            //TODO GET METADATA AKA TAGS
+            ArrayList<Tag> tags = new ArrayList<>();
+            tags.add(new Tag("version", "1.0"));
+            tags.add(new Tag("machine", "xyz"));
+            tags.add(new Tag("version", "2.0Beta"));
+
             l.add(new Build(job.getName(),
                     build.getFullDisplayName(),
                     build.getNumber(),
                     build.getStartTimeInMillis(),
                     build.getDuration(),
                     build.getUrl(),
-                    result == null ? "BUILDING" : result.toString()));
+                    result == null ? "BUILDING" : result.toString(),
+                    tags));
         }
 
         this.allBuilds = new ArrayList<>(l);
@@ -538,8 +546,10 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         public String result;
         @Exported
         public String buildUrl;
+        @Exported
+        public ArrayList<Tag> Tags;
 
-        public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result) {
+        public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result, ArrayList<Tag> tags) {
             this.jobName = jobName;
             this.buildName = buildName;
             this.number = number;
@@ -547,6 +557,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             this.duration = duration;
             this.buildUrl = "../../" + buildUrl;
             this.result = result;
+            this.Tags = tags;
         }
     }
 
@@ -630,6 +641,19 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
             this.projectStatus = status;
 
+        }
+    }
+
+    @ExportedBean(defaultVisibility = 999)
+    public class Tag{
+        @Exported
+        public String label;
+        @Exported
+        public String value;
+
+        Tag(String label, String value){
+            this.label = label;
+            this.value = value;
         }
     }
 }
