@@ -67,11 +67,7 @@
                 </div>
                 <!-- Right half -->
                 <div class="col-lg-6 right-border height100perc">
-                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
-                        <h4>${%Jobs}</h4>
-                        <!-- JENKINS_URL/api/json -->
-                        <div id="jenkinsJobStatuses" class="col-lg-12"></div>
-                    </div>
+
                     <!-- just to test the projects view -->
 
                     <!-- testing without nodes for now
@@ -81,10 +77,16 @@
                         <div id="jenkinsNodeStatuses" class="col-lg-12"></div>
                     </div> -->
 
-                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
+                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
                         <h4>${%Projects}</h4>
                         <!-- JENKINS_URL/computer/api/json-->
                         <div id="jenkinsViewsStatuses" class="col-lg-12"></div>
+                    </div>
+
+                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
+                        <h4>${%Jobs}</h4>
+                        <!-- JENKINS_URL/api/json -->
+                        <div id="jenkinsJobStatuses" class="col-lg-12"></div>
                     </div>
                 </div>
             </div>

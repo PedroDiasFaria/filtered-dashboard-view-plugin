@@ -11,7 +11,7 @@
   </parent>
   <groupId>org.synopsys.plugins</groupId>
   <artifactId>synopsys-dashboard-view</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0Beta</version>
   <packaging>hpi</packaging>
 
   <properties>

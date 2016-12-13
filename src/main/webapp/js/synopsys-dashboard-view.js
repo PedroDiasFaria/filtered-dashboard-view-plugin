@@ -333,7 +333,8 @@ var createTable = function(projectJobs){
                         if(cell.jobName == column.jobName ){
                             newCell= '<td class="cell ' + cell.result + '">';
                             newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
-                            newCell+= '<span class="callTags" style="display:none">';
+                            //newCell+= '<span class="callTags" style="display:none">';
+                            newCell+= '<span class="callTags">';
                             for(let tag of cell.tags){
                                 newCell+= tag.value + ' ';
                             }
@@ -349,8 +350,6 @@ var createTable = function(projectJobs){
                 tbody+= '</tr>';
             }
         }
-
-//table table-bordered table-striped table-hover
 
         table =             '<table id="project-table" class="project-table table table-striped table-bordered" cellspacing="0" width="100%">' +
                                 '<thead>'+

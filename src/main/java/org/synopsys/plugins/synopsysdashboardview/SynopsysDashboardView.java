@@ -1,12 +1,5 @@
 package org.synopsys.plugins.synopsysdashboardview;
 
-import com.sonyericsson.hudson.plugins.metadata.model.MetadataJobProperty;
-import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
-import com.sonyericsson.hudson.plugins.metadata.model.values.StringMetadataValue;
-import com.sonyericsson.hudson.plugins.metadata.search.MetadataQuerySearch;
-import com.sonyericsson.hudson.plugins.metadata.search.MetadataSearchPage;
-import com.sonyericsson.hudson.plugins.metadata.search.MetadataViewJobFilter;
-import com.sonyericsson.hudson.plugins.metadata.search.antlr.QueryWalker;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
@@ -14,7 +7,7 @@ import hudson.security.Permission;
 import hudson.util.RunList;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
+import net.sf.json.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -33,6 +26,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import java.net.*;
+import java.io.*;
+
 
 //
 import hudson.views.ListViewColumn;
@@ -348,8 +345,70 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     /********/
 
+    public ArrayList<Tag> getBuildTags(int buildNr, String jobName){
+        ArrayList<Tag> tags = new ArrayList<Tag>();
+
+        try {
+            String requestString;
+            String jenkinsUrl = Jenkins.getInstance().getRootUrl();
+            String encodedJobName = java.net.URLEncoder.encode(jobName, "UTF-8").replace("+", "%20");
+            String metadataApiRequest = "metadata-httpcli/get?job=" + encodedJobName + "&build=" + buildNr;
+            requestString = jenkinsUrl + metadataApiRequest;
+            URL url = new URL(requestString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder resultStringB = new StringBuilder();
+            String response;
+
+            while((response = rd.readLine()) != null){
+                resultStringB.append(response);
+            }
+            rd.close();
+
+            JSONArray jsonArray =  (JSONArray)JSONSerializer.toJSON(resultStringB.toString());
+
+            //String resultString = resultStringB.substring(1, resultStringB.toString().length()-1);
+            //JSONObject resultJson = JSONObject.fromObject(resultString);
+
+            for(int i=0; i<jsonArray.size(); i++){
+                String name = jsonArray.getJSONObject(i).get("name").toString();
+                //name = .last-saved
+                switch (name){
+                    /*case "job-info.last-saved.time" :
+                        break;
+                    case "job-info.last-saved.user.display-name" :
+                        break;
+                    case "job-info.last-saved.user.full-name" :
+                        break;
+                    case "build.result" :
+                        break;
+                    case "build.duration.ms" :
+                        break;
+                    case "build.duration.display" :
+                        break;
+                    case "build.builtOn" :
+                        break;
+                    case "build.scheduled" :
+                        break;*/
+                    case "job-info":
+                        break;
+                    case "build":
+                        break;
+                    default:
+                        String value = jsonArray.getJSONObject(i).get("value").toString();
+                        tags.add(new Tag(name, value));
+                        break;
+                }
+            }
+        }catch (IOException e){
+        }
+
+        return tags;
+    }
+
     @Exported(name="builds")
-    public ArrayList<Build> getBuildHistory() {
+    public ArrayList<Build> getBuildHistory(){
         List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
         RunList builds = new RunList(jobs).limit(getBuildsLimit);
         //TODO: unlimited builds or each job has its own in its bean (2nd better, 1st only for display)
@@ -371,10 +430,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             Result result = build.getResult();
 
             //TODO GET METADATA AKA TAGS
-            ArrayList<Tag> tags = new ArrayList<>();
+            //TODO http request get to metadata api
+            ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+
+            /*
             tags.add(new Tag("version", "1.0"));
             tags.add(new Tag("machine", "xyz"));
-            tags.add(new Tag("version", "2.0Beta"));
+            tags.add(new Tag("version", "2.0Beta"));*/
 
             l.add(new Build(job.getName(),
                     build.getFullDisplayName(),
