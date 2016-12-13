@@ -244,7 +244,7 @@ function open_project(divSelector, viewUrl, project){
             });
             var filterString = filter.join(' ');
             console.log(filterString);
-            table.search(filterString).draw();
+            table.search(filterString, true).draw();
             table.search('');                   //clears the 'search' form
         });
 
@@ -384,11 +384,11 @@ var createTags = function(projectJobs){
 
 var createTagsFilter = function(tags){
 
-    var tagsDiv = '<div class="container col-xs-12 col-sm-6 col-md-2" id="tagsDiv" ><h3><b>Filter by:</b></h3>';
+    var tagsDiv = '<div class="tagsDiv" id="tagsDiv" ><h3><b>Filter by:</b></h3>';
 
     for(var tag in tags){
         if(tags.hasOwnProperty(tag)){
-            tagsDiv+= '<div class="container" style="max-width: 200px; float:left; background-color:pink; border:2px solid red"><h4><b>' + tag + '</b></h4>';
+            tagsDiv+= '<div class="container" style="width: 250px; float:left; border:2px #4e5d6c solid"><h4><b>' + tag + '</b></h4>';
             tagsDiv+= '<ul class="list-group">';
             values = tags[tag];
                 for(let value of values){
@@ -406,7 +406,7 @@ var createTagsFilter = function(tags){
     }
 
 
-    tagsDiv+= tags + '</div>';
+    tagsDiv+= tags + '</div><br>';
     return tagsDiv;
 }
 

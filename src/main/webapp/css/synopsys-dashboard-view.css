@@ -91,7 +91,13 @@ th, td {
     border-color:#d2d2d2;
 }
 
+.tagsDiv{
+    overflow:hidden;
+    border: 1px solid #4e5d6c;
+    padding: 5px;
+}
 
+/**********************/
 /**switch checkbox css : http://bootsnipp.com/snippets/featured/material-design-switch **/
 .material-switch > input[type="checkbox"] {
     display: none;

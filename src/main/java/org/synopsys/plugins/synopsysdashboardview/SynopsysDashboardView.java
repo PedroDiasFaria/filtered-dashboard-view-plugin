@@ -270,16 +270,16 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getView(String name){
-       /* for(View v : views)
+        for(View v : views)
             if(v.getViewName().equals(name))
                 return v;
         // Fallback to subview of primary view if it is a ViewGroup
         View pv = getPrimaryView(); //line that causes problems
         if (pv instanceof ViewGroup)
             return ((ViewGroup)pv).getView(name);
-        return null;*/
+        return null;
 
-       return viewGroupMixIn.getView(name);
+        //return viewGroupMixIn.getView(name);
     }
 
     @Override
@@ -308,13 +308,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     }
 
     public Api getApi() {
-        //System.out.println("REFRESHING AND HERE WE GO AGAIN");
         getBuildHistory();
-        //System.out.println("BUILDS DONE");
         getAllJobs();
-        //System.out.println("JOBS DONE");
         getProjects();
-        //System.out.println("PROJECTS DONE");
         return new Api(this);
     }
 
@@ -330,7 +326,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     public View getDefaultView() {
         // Don't allow default subview for a NestedView that is the Jenkins default view..
         // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
-        return isDefault() ? null : getView(defaultViewName);
+        return this.isDefault() ? null : getView(defaultViewName);
     }
 
     public class DefaultViewProxy {
@@ -358,46 +354,27 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder resultStringB = new StringBuilder();
+            StringBuilder resultString = new StringBuilder();
             String response;
 
             while((response = rd.readLine()) != null){
-                resultStringB.append(response);
+                resultString.append(response);
             }
             rd.close();
 
-            JSONArray jsonArray =  (JSONArray)JSONSerializer.toJSON(resultStringB.toString());
-
-            //String resultString = resultStringB.substring(1, resultStringB.toString().length()-1);
-            //JSONObject resultJson = JSONObject.fromObject(resultString);
+            JSONArray jsonArray =  (JSONArray)JSONSerializer.toJSON(resultString.toString());
 
             for(int i=0; i<jsonArray.size(); i++){
                 String name = jsonArray.getJSONObject(i).get("name").toString();
-                //name = .last-saved
                 switch (name){
-                    /*case "job-info.last-saved.time" :
-                        break;
-                    case "job-info.last-saved.user.display-name" :
-                        break;
-                    case "job-info.last-saved.user.full-name" :
-                        break;
-                    case "build.result" :
-                        break;
-                    case "build.duration.ms" :
-                        break;
-                    case "build.duration.display" :
-                        break;
-                    case "build.builtOn" :
-                        break;
-                    case "build.scheduled" :
-                        break;*/
+                    //Hide metadata-plugin predefined tags
                     case "job-info":
                         break;
                     case "build":
                         break;
                     default:
                         String value = jsonArray.getJSONObject(i).get("value").toString();
-                        tags.add(new Tag(name, value));
+                        tags.add(new Tag(name.toUpperCase(), value.toLowerCase()));
                         break;
                 }
             }
@@ -411,7 +388,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     public ArrayList<Build> getBuildHistory(){
         List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
         RunList builds = new RunList(jobs).limit(getBuildsLimit);
-        //TODO: unlimited builds or each job has its own in its bean (2nd better, 1st only for display)
+
         ArrayList<Build> l = new ArrayList<Build>();
         Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
@@ -428,15 +405,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 continue;
 
             Result result = build.getResult();
-
-            //TODO GET METADATA AKA TAGS
-            //TODO http request get to metadata api
+            //HttpRequest to Metadata Plugin (doGet)
             ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
-
-            /*
-            tags.add(new Tag("version", "1.0"));
-            tags.add(new Tag("machine", "xyz"));
-            tags.add(new Tag("version", "2.0Beta"));*/
 
             l.add(new Build(job.getName(),
                     build.getFullDisplayName(),
@@ -517,14 +487,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 if (lb == null) {
                     status = "NOTBUILT";
                     lastBuildNr = 0;
-                    buildUrl = lb.getUrl();
-                    //metadata = lb.getDescription();
+                    buildUrl = "NOTBUILT";
 
                 } else {
                     status = lb.getResult().toString();
                     lastBuildNr = j.getLastBuild().getNumber();
                     buildUrl = lb.getUrl();
-                    //metadata = lb.getDescription();
                 }
             }
 
@@ -558,8 +526,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         ArrayList<JobData> jobs = new ArrayList<>();
 
         for(Object j : project.getAllItems()){
-                Job nj = (Job)j;
-                jobs.add(getJobByName(nj.getName()));
+            Job nj = (Job)j;
+            jobs.add(getJobByName(nj.getName()));
         }
 
         return jobs;
@@ -719,9 +687,3 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
     }
 }
-
-
-//TODO: Refactor everything
-//TODO: maybe remove visibility? don't want duplicates of JobVar, jobs within projects, builds within jobs etc
-//TODO: create a var for each list of job, build and project instead of always creating new ones
-//TODO: check buildUrl !
