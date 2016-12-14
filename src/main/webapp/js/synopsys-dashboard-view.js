@@ -45,7 +45,7 @@ function reload_jenkins_build_queue(tableSelector, jenkinsUrl, buildQueueSize) {
       startDate = new Date(val.inQueueSince);
       now = new Date();
       waitingFor = now.getTime() - val.inQueueSince;
-      taskName = val.task.name.replace(/(,?)\w*=/g, "$1");
+      //taskName = val.task.name.replace(/(,?)\w*=/g, "$1");  //TODO Uncaught TypeError: Cannot read property 'replace' of undefined
       newRow = '<tr><td class="text-left"><a href="' + val.task.url + '">'+ taskName + '</a></td><td>' + format_date(startDate) + '</td><td>' + format_interval(waitingFor) + '</td></tr>';
       $(tableSelector + ' tbody').append(newRow);
     });
@@ -303,7 +303,8 @@ var createTable = function(projectJobs){
             projectTable.columns.push(newCol);
             for(let build of job.Builds){
                 newCell = {url : "", result : "", jobName : "", tags : ""};
-                newCell.url = build.buildUrl;
+                console.log(build);
+                newCell.url = build.buildUrl;   //TODO undefined?
                 newCell.result = build.result;
                 newCell.jobName = job.JobName.value;
                 newCell.tags = build.Tags;
@@ -332,9 +333,13 @@ var createTable = function(projectJobs){
                     for(let cell of rowArray){
                         if(cell.jobName == column.jobName ){
                             newCell= '<td class="cell ' + cell.result + '">';
-                            newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
+                            if(cell.url == "null"){
+                                newCell+= '<a href="javascript:;"><div>' + cell.result+ '</div>';
+                            }else{
+                                newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
+                            }
                             //newCell+= '<span class="callTags" style="display:none">';
-                            newCell+= '<span class="callTags">';
+                            newCell+= '<span class="callTags">';        //TODO Testing metadata filter search
                             for(let tag of cell.tags){
                                 newCell+= tag.value + ' ';
                             }
@@ -361,6 +366,20 @@ var createTable = function(projectJobs){
                             '</table>';
 
         return table;
+}
+
+function jobsHide(idButton, height){
+       $(idButton).click(function(){
+            if( $('#jenkinsJobsDiv').css('display') == 'none' ){
+                $('#jenkinsJobsDiv').css('display', 'block');
+                $('#jenkinsProjectsDiv').css('height', height + '%');
+                $(idButton).html("Hide Jobs");
+            }else{
+                $('#jenkinsJobsDiv').css('display', 'none');
+                $('#jenkinsProjectsDiv').css('height', '100%');
+                $(idButton).html("Show Jobs");
+            }
+        });
 }
 
 var createTags = function(projectJobs){
@@ -421,4 +440,5 @@ var tableClass = function(){
 }
 
 //http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
-//TODO remove projects In project table variable
+//TODO filter with OR rule
+//TODO show line by tag rule

@@ -395,6 +395,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         for (Object b : builds) {
             Run build = (Run)b;
             Job job = build.getParent();
+            String buildUrl = build.getUrl();
 
             // Skip Maven modules. They are part of parent Maven project
             if (job.getClass().getName().equals("hudson.maven.MavenModule"))
@@ -413,7 +414,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                     build.getNumber(),
                     build.getStartTimeInMillis(),
                     build.getDuration(),
-                    build.getUrl(),
+                    buildUrl == null ? "null" : buildUrl,
                     result == null ? "BUILDING" : result.toString(),
                     tags));
         }
@@ -460,7 +461,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         /********/
         String url = "";
         String buildUrl = "";
-        String metadata = "";
         int lastBuildNr = 0;
         /********/
         Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
@@ -480,7 +480,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
             if (j.isBuilding()) {
                 status = "BUILDING";
-                metadata = "BUILDING";
                 buildUrl = "BUILDING";
             } else {
                 Run lb = j.getLastBuild();
@@ -506,7 +505,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             String dir = j.getBuildDir().toString();
             builds = getBuildsFromJob(j);
 
-            jobs.add(new JobData(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, metadata, builds));
+            jobs.add(new JobData(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, builds));
         }
 
         this.allJobs = new ArrayList<>(jobs);
@@ -546,8 +545,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
         //Get name of view
         for(View p : projects){
-            if(p.getDisplayName().equals("All") ||                              //Only counting real projects, excluding THIS and 'All'
-                    p.getDisplayName().equals(this.getDisplayName()))
+            if(p.getDisplayName().equals(this.getDisplayName())) //Only counting real projects, excluding THIS
                 continue;
             else{
                 Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p), null);
@@ -602,22 +600,19 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         @Exported
         public JobVar Dir = new JobVar("Directory", "", "expandable");
         @Exported
-        public JobVar LastBuildNr = new JobVar("Last Build", "", "expandable");
+        public JobVar LastBuildNr = new JobVar("Build Number", "", "expandable");
         @Exported
         public JobVar LastBuildUrl = new JobVar("Last Build URL", "", "expandable");
         @Exported
-        public JobVar Metadata = new JobVar("Metadata", "", "expandable");
-        @Exported
         public ArrayList<Build> Builds = new ArrayList<>();
 
-        public JobData(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, String metadata, ArrayList<Build> builds) {
+        public JobData(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, ArrayList<Build> builds) {
             this.JobName.setValue(jobName);
             this.Status.setValue(status);
             this.JobUrl.setValue("../../" + jobUrl);            //jenkinsHome/...
             this.Dir.setValue(dir);
-            this.LastBuildNr.setValue("../../" + lastBuildNr);             //jenkinsHome/...
+            this.LastBuildNr.setValue(lastBuildNr);             //jenkinsHome/...
             this.LastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
-            this.Metadata.setValue(metadata);
             this.Builds = builds;
         }
     }

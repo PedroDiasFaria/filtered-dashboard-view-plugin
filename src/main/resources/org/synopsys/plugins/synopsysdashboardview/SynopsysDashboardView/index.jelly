@@ -41,10 +41,11 @@
                     <span class="glyphicon glyphicon-cog"></span>
                 </div>
             </a>
+            <button class="btn-default" id="jobsHide">Hide Jobs</button>
             <div class="container-fluid height100perc" id="main-dashboard">
                 <!-- Left half -->
                 <div class="col-lg-6 right-border height100perc">
-                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
+                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;" id="jenkinsHistoryDiv">
                         <h4>${%BuildHistory}</h4>
                         <!-- VIEW_URL/api/json -->
                         <table id="jenkinsBuildHistory" class="table table-striped table-bordered ${it.tableStyle}">
@@ -54,7 +55,7 @@
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
+                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;" id="jenkinsQueueDiv">
                         <h4>${%BuildQueue}</h4>
                         <!-- JENKINS_URL/queue/api/json -->
                         <table id="jenkinsBuildQueue" class="table table-striped table-bordered ${it.tableStyle}">
@@ -77,13 +78,13 @@
                         <div id="jenkinsNodeStatuses" class="col-lg-12"></div>
                     </div> -->
 
-                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;">
+                    <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;" id="jenkinsProjectsDiv">
                         <h4>${%Projects}</h4>
                         <!-- JENKINS_URL/computer/api/json-->
                         <div id="jenkinsViewsStatuses" class="col-lg-12"></div>
                     </div>
 
-                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
+                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;" id="jenkinsJobsDiv">
                         <h4>${%Jobs}</h4>
                         <!-- JENKINS_URL/api/json -->
                         <div id="jenkinsJobStatuses" class="col-lg-12"></div>
@@ -96,6 +97,9 @@
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/synopsys-dashboard-view.js"></script>
 
+            <script type="text/javascript">
+
+            </script>
 
             <script type="text/javascript">
                 var jenkinsUrl = '${rootURL}';
@@ -108,6 +112,8 @@
 
                 nodeStatuses["Online"] = "${%Online}";
                 nodeStatuses["Offline"] = "${%Offline}";
+
+                jobsHide('#jobsHide', '${it.topHalfHeight}');
 
                 function reload_info (interval) {
                     reload_jenkins_build_history('#jenkinsBuildHistory', jenkinsUrl + '/${it.url}', buildHistorySize);
