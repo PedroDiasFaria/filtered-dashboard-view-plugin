@@ -46,6 +46,7 @@ function reload_jenkins_build_queue(tableSelector, jenkinsUrl, buildQueueSize) {
       now = new Date();
       waitingFor = now.getTime() - val.inQueueSince;
       //taskName = val.task.name.replace(/(,?)\w*=/g, "$1");  //TODO Uncaught TypeError: Cannot read property 'replace' of undefined
+      taskName = val.task.name;
       newRow = '<tr><td class="text-left"><a href="' + val.task.url + '">'+ taskName + '</a></td><td>' + format_date(startDate) + '</td><td>' + format_interval(waitingFor) + '</td></tr>';
       $(tableSelector + ' tbody').append(newRow);
     });
@@ -73,7 +74,7 @@ function reload_jenkins_build_history(tableSelector, viewUrl, buildHistorySize) 
     // Remove all existing rows
     $(tableSelector + ' tbody').find('tr').remove();
     i = 0;
-    $.each( data.builds, function( key, val ) {
+    $.each( data.buildHistory, function( key, val ) {
       i++;
       if (i > buildHistorySize) {
         return;
@@ -217,6 +218,8 @@ function open_project(divSelector, viewUrl, project){
 
         goBackBtn = '<button class="btn btn-default btn-sm" id="goBackBtn">Go Back</button>';
 
+        console.log("Project : " + project.projectName);
+        console.log(project);
         var projectTable = createTable(project.projectJobs);
         var projectTags = createTags(project.projectJobs);
         var tagsFilter = createTagsFilter(projectTags);
@@ -301,9 +304,12 @@ var createTable = function(projectJobs){
             newCol.jobName = job.JobName.value;
             newCol.url = job.JobUrl.value;
             projectTable.columns.push(newCol);
+            console.log("job: ");
+            console.log(job);
+            console.log("job.Builds: ");
+            console.log(job.Builds);
             for(let build of job.Builds){
                 newCell = {url : "", result : "", jobName : "", tags : ""};
-                console.log(build);
                 newCell.url = build.buildUrl;   //TODO undefined?
                 newCell.result = build.result;
                 newCell.jobName = job.JobName.value;

@@ -17,8 +17,11 @@
         <f:entry title="${%Records in build queue}">
             <f:number name="buildQueueSize" value="${it.buildQueueSize}" />
         </f:entry>
-        <f:entry title="${%Builds in project table}">
+        <f:entry title="${%Builds in project table}"> <!-- EDIT THIS TO "Consider only last x builds"-->
             <f:number name="projectBuildTableSize" value="${it.projectBuildTableSize}" />
+        </f:entry>
+        <f:entry title="${%Select views to display}">
+            <f:checkbox name="selectedViews" field="selectedViews"></f:checkbox>
         </f:entry>
         <f:entry title="${%Use condensed tables}">
             <f:checkbox name="useCondensedTables" field="useCondensedTables" />

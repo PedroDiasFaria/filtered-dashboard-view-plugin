@@ -69,6 +69,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private ArrayList<JobData> allJobs = new ArrayList<>();
     private ArrayList<Build> allBuilds = new ArrayList<>();
     private int projectBuildTableSize;
+    private String selectedViews;
     /******/
     @DataBoundConstructor
     public SynopsysDashboardView(String name, String viewName) {
@@ -84,6 +85,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.statusButtonSize = "";
         this.layoutHeightRatio = "6040";
         this.filterRegex = null;
+        this.selectedViews = "SELECT VIEWS HERE";
         /**************/
 
         this.projectBuildTableSize = 15;
@@ -119,6 +121,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
         this.statusButtonSize = json.getString("statusButtonSize");
         this.layoutHeightRatio = json.getString("layoutHeightRatio");
+
+        this.selectedViews = json.getString("selectedViews");
         /************************/
 
         save();
@@ -384,10 +388,11 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return tags;
     }
 
-    @Exported(name="builds")
+    //Gets last 'buildHistorySize' builds
+    @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
         List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
-        RunList builds = new RunList(jobs).limit(getBuildsLimit);
+        RunList builds = new RunList(jobs).limit(getBuildHistorySize()); //no limit of builds, get all for now //TODO check below
 
         ArrayList<Build> l = new ArrayList<Build>();
         Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
@@ -419,7 +424,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                     tags));
         }
 
-        this.allBuilds = new ArrayList<>(l);
+        //this.allBuilds = new ArrayList<>(l); //-> should be "last X builds per job" //TODO
         return l;
     }
 
@@ -430,7 +435,18 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         for(Object b : job.getBuilds()){
             if(size < getProjectBuildTableSize()) {
                 Run build = (Run) b;
-                builds.add(getBuildByName(build.getFullDisplayName()));
+                Result result = build.getResult();
+                ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+                String buildUrl = build.getUrl();
+
+                builds.add(new Build(job.getName(),
+                            build.getFullDisplayName(),
+                            build.getNumber(),
+                            build.getStartTimeInMillis(),
+                            build.getDuration(),
+                            buildUrl == null ? "null" : buildUrl,
+                            result == null ? "BUILDING" : result.toString(),
+                            tags));
             }else
                 break;
             size++;
@@ -438,6 +454,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return builds;
     }
 
+    /*
     public Build getBuildByName(String buildName){
         for(Build build : this.allBuilds){
             if(build.buildName.equals(buildName)){
@@ -445,12 +462,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             }
         }
         return null;
-    }
+    }*/
 
     /*******/
 
     /*******/
 
+    //TODO get jobs only from selected views
     @Exported(name="allJobs")
     public Collection<JobData> getAllJobs() {
         List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
@@ -548,8 +566,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             if(p.getDisplayName().equals(this.getDisplayName())) //Only counting real projects, excluding THIS
                 continue;
             else{
-                Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p), null);
-                newProject.setStatus();
+                Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p));
+                //newProject.setStatus();
                 allProjects.add(newProject);
             }
         }
@@ -645,27 +663,47 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         @Exported
         public ArrayList<JobData> projectJobs;  //list of all the jobs related to this project
         @Exported
-        public String projectStatus;
+        public String projectStatus = "projectStatus";
 
-        Project(String name, String url, ArrayList<JobData> jobs, String status){
+        Project(String name, String url, ArrayList<JobData> jobs){
             this.projectName = name;
             this.projectUrl = "../../" + url; //jenkinsHome/...
             this.projectJobs = jobs;
-            this.projectStatus = status;
+            this.setStatus();
         }
 
         public void setStatus(){
 
-            String status = "SUCCESS"; //consider successfull by default
+            int success = 0;
+            int unstable = 0;
+            int failure = 0;
+            String status = "NOTBUILT"; //consider not built by default
 
             for(JobData job : this.projectJobs){
-                if(job.Status.value.equals("FAILURE")) {
-                    status = "FAILURE";
+                switch (job.Status.value){
+                    case "FAILURE":
+                        failure++;
+                        break;
+                    case "SUCCESS":
+                        success++;
+                        break;
+                    case "UNSTABLE":
+                        unstable++;
+                        break;
+                    default:
+                        break;
                 }
             }
 
+            //Always consider the worst status for he project
+            if(success > 0){
+                status = "SUCCESS";
+            }if(unstable > 0){
+                status = "UNSTABLE";
+            }if(failure > 0){
+                status = "FAILURE";
+            }
             this.projectStatus = status;
-
         }
     }
 
