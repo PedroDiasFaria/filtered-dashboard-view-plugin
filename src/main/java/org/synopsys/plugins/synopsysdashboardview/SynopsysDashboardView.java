@@ -1,11 +1,13 @@
 package org.synopsys.plugins.synopsysdashboardview;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
 import hudson.security.Permission;
 import hudson.util.RunList;
 import hudson.views.ViewsTabBar;
+import javafx.util.Pair;
 import jenkins.model.Jenkins;
 import net.sf.json.*;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -16,10 +18,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +68,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private ArrayList<JobData> allJobs = new ArrayList<>();
     private ArrayList<Build> allBuilds = new ArrayList<>();
     private int projectBuildTableSize;
-    private String selectedViews;
+
+    private HashMap<String, Boolean> selectedViews;
     /******/
     @DataBoundConstructor
     public SynopsysDashboardView(String name, String viewName) {
@@ -85,9 +85,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.statusButtonSize = "";
         this.layoutHeightRatio = "6040";
         this.filterRegex = null;
-        this.selectedViews = "SELECT VIEWS HERE";
         /**************/
 
+        this.selectedViews = new HashMap<>();
         this.projectBuildTableSize = 15;
     }
 
@@ -121,11 +121,22 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
         this.statusButtonSize = json.getString("statusButtonSize");
         this.layoutHeightRatio = json.getString("layoutHeightRatio");
+        JSONObject selectedViewsJSON = json.getJSONObject("selectedViews");
+        selectViews(selectedViewsJSON);
 
-        this.selectedViews = json.getString("selectedViews");
+        //this.selectedViews = json.get("selectedViews");
         /************************/
 
         save();
+    }
+
+    public void selectViews(JSONObject selectedViewsJSON){
+        Iterator<?> keys = selectedViewsJSON.keys();
+        while(keys.hasNext()){
+            String key = (String)keys.next();
+            String value = selectedViewsJSON.get(key).toString();
+            this.selectedViews.put(key, Boolean.valueOf(value));
+        }
     }
 
     @Override
@@ -143,6 +154,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Bellow all from mission control:
     /********************/
     protected Object readResolve() {
+
         if (getBuildsLimit == 0)
             getBuildsLimit = 250;
 
@@ -163,6 +175,10 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
         if (projectBuildTableSize == 0)
             projectBuildTableSize = 15;
+
+        if(selectedViews == null){
+            this.selectedViews = new HashMap<>();
+        }
 
         /*ViewGruopMix in and sets primary view*/
         if (views == null) {
@@ -239,6 +255,10 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return layoutHeightRatio.substring(2, 4);
     }
 
+    public HashMap<String, Boolean> getSelectedViews(){
+       return selectedViews;
+    }
+
     //Viewgroup functions
     //https://github.com/jenkinsci/nested-view-plugin/blob/master/src/main/java/hudson/plugins/nested_view/NestedView.java
     /**********/
@@ -274,7 +294,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getView(String name){
-        for(View v : views)
+        for(View v : getViews())
             if(v.getViewName().equals(name))
                 return v;
         // Fallback to subview of primary view if it is a ViewGroup
@@ -550,7 +570,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return jobs;
     }
 
-    public Collection<View> getViews(){
+    public synchronized Collection<View> getViews(){
         return Jenkins.getInstance().getViews();
     }
 
@@ -720,3 +740,5 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
     }
 }
+
+//TODO : now only display views that are 'true' on selectedViews, and their jobs

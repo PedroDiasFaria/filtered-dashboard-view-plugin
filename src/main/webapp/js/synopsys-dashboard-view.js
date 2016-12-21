@@ -310,7 +310,7 @@ var createTable = function(projectJobs){
             console.log(job.Builds);
             for(let build of job.Builds){
                 newCell = {url : "", result : "", jobName : "", tags : ""};
-                newCell.url = build.buildUrl;   //TODO undefined?
+                newCell.url = build.buildUrl;
                 newCell.result = build.result;
                 newCell.jobName = job.JobName.value;
                 newCell.tags = build.Tags;
@@ -327,7 +327,7 @@ var createTable = function(projectJobs){
         var tbody = "";
 
         for(let column of projectTable.columns){
-            thead+='<th class="no-sort" style="width: 10%"><a href="'+ column.url +'" target="_blank"><div><h4>' + column.jobName + '</h4></div></a></th>';
+            thead+='<th class="no-sort" style="width: 10%"><div><span><a href="'+ column.url +'" target="_blank"><h4>' + column.jobName + '</h4></a></span></div></th>';
         }
 
         for(var buildNr in  projectTable.rows){
@@ -344,8 +344,8 @@ var createTable = function(projectJobs){
                             }else{
                                 newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
                             }
-                            //newCell+= '<span class="callTags" style="display:none">';
-                            newCell+= '<span class="callTags">';        //TODO Testing metadata filter search
+                            newCell+= '<span class="callTags" style="display:none">';
+                            //newCell+= '<span class="callTags">';        //TODO Testing metadata filter search
                             for(let tag of cell.tags){
                                 newCell+= tag.value + ' ';
                             }
@@ -362,7 +362,7 @@ var createTable = function(projectJobs){
             }
         }
 
-        table =             '<table id="project-table" class="project-table table table-striped table-bordered" cellspacing="0" width="100%">' +
+        table =             '<table id="project-table" class="project-table table table-striped" cellspacing="0" width="100%">' +
                                 '<thead>'+
                                     '<tr><th style="width: 3%" class="text-left "><h4>Build # / Job</h4></th>' + thead + '</tr>'+
                                 '</thead>'+
