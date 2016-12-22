@@ -180,7 +180,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             this.selectedViews = new HashMap<>();
         }
 
-        /*ViewGruopMix in and sets primary view*/
+        /*ViewGroupMix in and sets primary view*/
         if (views == null) {
             views = new CopyOnWriteArrayList<View>();
         }
@@ -294,13 +294,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getView(String name){
-        for(View v : getViews())
+        for(View v : views)
             if(v.getViewName().equals(name))
                 return v;
         // Fallback to subview of primary view if it is a ViewGroup
-        View pv = getPrimaryView(); //line that causes problems
+        /*View pv = getPrimaryView(); //line that causes problems
         if (pv instanceof ViewGroup)
-            return ((ViewGroup)pv).getView(name);
+            return ((ViewGroup)pv).getView(name);*/
         return null;
 
         //return viewGroupMixIn.getView(name);
@@ -474,16 +474,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return builds;
     }
 
-    /*
-    public Build getBuildByName(String buildName){
-        for(Build build : this.allBuilds){
-            if(build.buildName.equals(buildName)){
-                return build;
-            }
-        }
-        return null;
-    }*/
-
     /*******/
 
     /*******/
@@ -577,21 +567,18 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Calling each view as a separate project
     @Exported(name="allProjects")
     public Collection<Project> getProjects(){
-
         List<View> projects = new ArrayList<View>(getViews());
         ArrayList<Project> allProjects = new ArrayList<>();
 
         //Get name of view
         for(View p : projects){
-            if(p.getDisplayName().equals(this.getDisplayName())) //Only counting real projects, excluding THIS
-                continue;
-            else{
-                Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p));
-                //newProject.setStatus();
-                allProjects.add(newProject);
+            if(this.selectedViews.containsKey(p.getDisplayName())){
+                if(this.selectedViews.get(p.getDisplayName())){
+                    Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p));
+                    allProjects.add(newProject);
+                }
             }
         }
-
         this.allProjects = new ArrayList<>(allProjects);
         return allProjects;
     }
