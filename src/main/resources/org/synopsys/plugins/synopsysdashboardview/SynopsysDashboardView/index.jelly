@@ -41,8 +41,8 @@
                     <span class="glyphicon glyphicon-cog"></span>
                 </div>
             </a>
-            <button class="btn-default" id="jobsHide">Hide Jobs</button>
             <div class="container-fluid height100perc" id="main-dashboard">
+                <button class="btn-default" id="jobsHide">Hide Jobs</button>
                 <!-- Left half -->
                 <div class="col-lg-6 right-border height100perc">
                     <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;" id="jenkinsHistoryDiv">

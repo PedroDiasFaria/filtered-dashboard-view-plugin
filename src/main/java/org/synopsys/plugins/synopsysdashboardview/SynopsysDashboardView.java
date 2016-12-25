@@ -1,44 +1,33 @@
 package org.synopsys.plugins.synopsysdashboardview;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
 import hudson.security.Permission;
 import hudson.util.RunList;
 import hudson.views.ViewsTabBar;
-import javafx.util.Pair;
 import jenkins.model.Jenkins;
 import net.sf.json.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+
 import java.util.*;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import java.net.*;
 import java.io.*;
 
-
-//
-import hudson.views.ListViewColumn;
-import hudson.views.ViewsTabBar;
-
 import org.kohsuke.stapler.*;
-import org.kohsuke.stapler.export.Exported;
-import static hudson.Util.fixEmpty;
-
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 //Metadata
 
@@ -61,15 +50,15 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     //Allways hold at least one view
     private CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
-    private transient ViewGroupMixIn viewGroupMixIn;
+    //private transient ViewGroupMixIn viewGroupMixIn;
     private String defaultViewName;
 
-    private ArrayList<Project> allProjects = new ArrayList<>();
-    private ArrayList<JobData> allJobs = new ArrayList<>();
-    private ArrayList<Build> allBuilds = new ArrayList<>();
+     private ArrayList<Build> allBuilds = new ArrayList<Build>();
     private int projectBuildTableSize;
 
     private HashMap<String, Boolean> selectedViews;
+    private Map<String, ArrayList<String>> jobsInProjectMap;
+    private Map<String, JobData> jobsMap;
     /******/
     @DataBoundConstructor
     public SynopsysDashboardView(String name, String viewName) {
@@ -87,7 +76,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.filterRegex = null;
         /**************/
 
-        this.selectedViews = new HashMap<>();
+        this.selectedViews = new HashMap<String, Boolean>();
+        this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
+        this.jobsMap = new TreeMap<String, JobData>();
         this.projectBuildTableSize = 15;
     }
 
@@ -124,7 +115,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         JSONObject selectedViewsJSON = json.getJSONObject("selectedViews");
         selectViews(selectedViewsJSON);
 
-        //this.selectedViews = json.get("selectedViews");
+        this.jobsMap = new TreeMap<>();
+        this.jobsInProjectMap = new TreeMap<>();
         /************************/
 
         save();
@@ -177,10 +169,17 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             projectBuildTableSize = 15;
 
         if(selectedViews == null){
-            this.selectedViews = new HashMap<>();
+            this.selectedViews = new HashMap<String, Boolean>();
         }
 
-        /*ViewGroupMix in and sets primary view*/
+        if(jobsInProjectMap == null){
+            this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
+        }
+
+        if(jobsMap == null){
+            this.jobsMap = new TreeMap<String, JobData>();
+        }
+
         if (views == null) {
             views = new CopyOnWriteArrayList<View>();
         }
@@ -189,24 +188,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             // preserve the non-empty invariant
             views.add(new ListView("Default", this));
         }
-
-        viewGroupMixIn = new ViewGroupMixIn(this) {
-
-            @Override
-            protected List<View> views() {
-                return views;
-            }
-
-            @Override
-            protected String primaryView() {
-                return defaultViewName;
-            }
-
-            @Override
-            protected void primaryView(String name) {
-                defaultViewName = name;
-            }
-        };
 
         return this;
     }
@@ -259,10 +240,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
        return selectedViews;
     }
 
-    //Viewgroup functions
-    //https://github.com/jenkinsci/nested-view-plugin/blob/master/src/main/java/hudson/plugins/nested_view/NestedView.java
-    /**********/
-
     @Override
     public ItemGroup<? extends TopLevelItem> getItemGroup(){
         return getOwnerItemGroup();
@@ -270,13 +247,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getPrimaryView(){
-        /*
+
             View v = getView(defaultViewName);
             if(v==null) // fallback
                 v = views.get(0);
 
-            return v;*/
-        return viewGroupMixIn.getPrimaryView();
+            return v;
     }
 
     public boolean canDelete(View view){
@@ -297,23 +273,16 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         for(View v : views)
             if(v.getViewName().equals(name))
                 return v;
-        // Fallback to subview of primary view if it is a ViewGroup
-        /*View pv = getPrimaryView(); //line that causes problems
-        if (pv instanceof ViewGroup)
-            return ((ViewGroup)pv).getView(name);*/
         return null;
-
-        //return viewGroupMixIn.getView(name);
     }
 
     @Override
     public void deleteView(View view) throws IOException{
-        viewGroupMixIn.deleteView(view);
+        views.remove(view);
         save();
     }
 
     public void onViewRenamed(View view, String oldName, String newName){
-
     }
     /**********/
 
@@ -333,7 +302,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public Api getApi() {
         getBuildHistory();
-        getAllJobs();
         getProjects();
         return new Api(this);
     }
@@ -363,7 +331,118 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
     }
 
-    /********/
+    public synchronized Collection<View> getViews(){
+        return Jenkins.getInstance().getViews();
+    }
+
+    /******************/
+    /**DashboardLogic**/
+    /******************/
+
+    //Calling each view as a separate project
+    @Exported(name="allProjects")
+    public Collection<Project> getProjects(){
+        List<View> projects = new ArrayList<View>(getViews());
+        ArrayList<Project> allProjects = new ArrayList<Project>();
+
+        for(View p : projects){
+            if(this.selectedViews.containsKey(p.getViewName())){
+                if(this.selectedViews.get(p.getViewName())){
+                    Project newProject = new Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
+                    allProjects.add(newProject);
+                }
+            }
+        }
+        return allProjects;
+    }
+
+    public ArrayList<JobData> getJobsFromProject(View project){
+        ArrayList<JobData> jobs = new ArrayList<JobData>();
+        ArrayList<String> jobNames = new ArrayList<String>();
+
+        try {
+            jobs = new ArrayList<JobData>();
+            for (Object j : project.getAllItems()) {
+                Job nj = (Job) j;
+                jobNames.add(nj.getName());
+                jobs.add(getJobByName(nj.getName()));
+            }
+
+            this.jobsInProjectMap.put(project.getViewName(), jobNames);
+            return jobs;
+        }catch (Error e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public JobData getJobByName(String jobName){
+
+        if(jobsMap.containsKey(jobName)){
+            return jobsMap.get(jobName);
+        }else {
+            try {
+                List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
+                for (Job j : jenkinsJobs) {
+                    if(j.getName().equals(jobName)) {
+                        ArrayList<Build> builds = new ArrayList<Build>();
+                        String status;
+                        String name;
+                        String url = "";
+                        String buildUrl = "";
+                        int lastBuildNr = 0;
+                        Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
+
+                        // Skip matrix configuration sub-jobs and Maven modules
+                        if (j.getClass().getName().equals("hudson.matrix.MatrixConfiguration")
+                                || j.getClass().getName().equals("hudson.maven.MavenModule"))
+                            continue;
+
+                        // If filtering is enabled, skip jobs not matching the filter
+                        if (r != null && !r.matcher(j.getName()).find())
+                            continue;
+
+                        // Get the url to link it in the dashboard
+                        url = j.getUrl();
+
+                        if (j.isBuilding()) {
+                            status = "BUILDING";
+                            buildUrl = "BUILDING";
+                        } else {
+                            Run lb = j.getLastBuild();
+                            if (lb == null) {
+                                status = "NOTBUILT";
+                                lastBuildNr = 0;
+                                buildUrl = "NOTBUILT";
+
+                            } else {
+                                status = lb.getResult().toString();
+                                lastBuildNr = j.getLastBuild().getNumber();
+                                buildUrl = lb.getUrl();
+                            }
+                        }
+
+                        ItemGroup parent = j.getParent();
+                        if (parent != null && parent.getClass().getName().equals("com.cloudbees.hudson.plugins.folder.Folder")) {
+                            name = parent.getFullName() + " / " + j.getName();
+                        } else {
+                            name = j.getName();
+                        }
+
+                        String dir = j.getBuildDir().toString();
+                        builds = getBuildsFromJob(j);
+
+                        JobData newJob = new JobData(name, status, url, dir, Integer.toString(lastBuildNr), buildUrl, builds);
+                        this.jobsMap.put(jobName, newJob);
+                        return newJob;
+                    }
+                }
+            } catch (Error e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 
     public ArrayList<Tag> getBuildTags(int buildNr, String jobName){
         ArrayList<Tag> tags = new ArrayList<Tag>();
@@ -377,32 +456,35 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             URL url = new URL(requestString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder resultString = new StringBuilder();
-            String response;
+            if(connection.getResponseCode() != HttpURLConnection.HTTP_NOT_FOUND) {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder resultString = new StringBuilder();
+                String response;
 
-            while((response = rd.readLine()) != null){
-                resultString.append(response);
-            }
-            rd.close();
+                while ((response = rd.readLine()) != null) {
+                    resultString.append(response);
+                }
+                rd.close();
 
-            JSONArray jsonArray =  (JSONArray)JSONSerializer.toJSON(resultString.toString());
+                JSONArray jsonArray = (JSONArray) JSONSerializer.toJSON(resultString.toString());
 
-            for(int i=0; i<jsonArray.size(); i++){
-                String name = jsonArray.getJSONObject(i).get("name").toString();
-                switch (name){
-                    //Hide metadata-plugin predefined tags
-                    case "job-info":
-                        break;
-                    case "build":
-                        break;
-                    default:
-                        String value = jsonArray.getJSONObject(i).get("value").toString();
-                        tags.add(new Tag(name.toUpperCase(), value.toLowerCase()));
-                        break;
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    String name = jsonArray.getJSONObject(i).get("name").toString();
+                    switch (name) {
+                        //Hide metadata-plugin predefined tags
+                        case "job-info":
+                            break;
+                        case "build":
+                            break;
+                        default:
+                            String value = jsonArray.getJSONObject(i).get("value").toString();
+                            tags.add(new Tag(name.toUpperCase(), value.toLowerCase()));
+                            break;
+                    }
                 }
             }
         }catch (IOException e){
+            e.printStackTrace();
         }
 
         return tags;
@@ -411,45 +493,50 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Gets last 'buildHistorySize' builds
     @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
-        List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
-        RunList builds = new RunList(jobs).limit(getBuildHistorySize()); //no limit of builds, get all for now //TODO check below
+        try {
+            List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
+            RunList builds = new RunList(jobs).limit(getBuildHistorySize()); //no limit of builds, get all for now //TODO check below
 
-        ArrayList<Build> l = new ArrayList<Build>();
-        Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
+            ArrayList<Build> l = new ArrayList<Build>();
+            Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
-        for (Object b : builds) {
-            Run build = (Run)b;
-            Job job = build.getParent();
-            String buildUrl = build.getUrl();
+            for (Object b : builds) {
+                Run build = (Run) b;
+                Job job = build.getParent();
+                String buildUrl = build.getUrl();
 
-            // Skip Maven modules. They are part of parent Maven project
-            if (job.getClass().getName().equals("hudson.maven.MavenModule"))
-                continue;
+                // Skip Maven modules. They are part of parent Maven project
+                if (job.getClass().getName().equals("hudson.maven.MavenModule"))
+                    continue;
 
-            // If filtering is enabled, skip jobs not matching the filter
-            if (r != null && !r.matcher(job.getName()).find())
-                continue;
+                // If filtering is enabled, skip jobs not matching the filter
+                if (r != null && !r.matcher(job.getName()).find())
+                    continue;
 
-            Result result = build.getResult();
-            //HttpRequest to Metadata Plugin (doGet)
-            ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+                Result result = build.getResult();
+                //HttpRequest to Metadata Plugin (doGet)
+                ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
 
-            l.add(new Build(job.getName(),
-                    build.getFullDisplayName(),
-                    build.getNumber(),
-                    build.getStartTimeInMillis(),
-                    build.getDuration(),
-                    buildUrl == null ? "null" : buildUrl,
-                    result == null ? "BUILDING" : result.toString(),
-                    tags));
+                l.add(new Build(job.getName(),
+                        build.getFullDisplayName(),
+                        build.getNumber(),
+                        build.getStartTimeInMillis(),
+                        build.getDuration(),
+                        buildUrl == null ? "null" : buildUrl,
+                        result == null ? "BUILDING" : result.toString(),
+                        tags));
+            }
+
+            //this.allBuilds = new ArrayList<>(l); //-> should be "last X builds per job" //TODO
+            return l;
+        }catch (Error e){
+            e.printStackTrace();
         }
-
-        //this.allBuilds = new ArrayList<>(l); //-> should be "last X builds per job" //TODO
-        return l;
+        return null;
     }
 
     public ArrayList<Build> getBuildsFromJob(Job job){
-        ArrayList<Build> builds = new ArrayList<>();
+        ArrayList<Build> builds = new ArrayList<Build>();
         int size = 0;
 
         for(Object b : job.getBuilds()){
@@ -474,258 +561,14 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return builds;
     }
 
-    /*******/
-
-    /*******/
-
-    //TODO get jobs only from selected views
     @Exported(name="allJobs")
     public Collection<JobData> getAllJobs() {
-        List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
-        ArrayList<JobData> jobs = new ArrayList<JobData>();
-        ArrayList<Build> builds = new ArrayList<Build>();
-        String status, name;
-
-        /********/
-        String url = "";
-        String buildUrl = "";
-        int lastBuildNr = 0;
-        /********/
-        Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
-
-        for (Job j : jenkinsJobs) {
-            // Skip matrix configuration sub-jobs and Maven modules
-            if (j.getClass().getName().equals("hudson.matrix.MatrixConfiguration")
-                    || j.getClass().getName().equals("hudson.maven.MavenModule"))
-                continue;
-
-            // If filtering is enabled, skip jobs not matching the filter
-            if (r != null && !r.matcher(j.getName()).find())
-                continue;
-
-            // Get the url to link it in the dashboard
-            url = j.getUrl();
-
-            if (j.isBuilding()) {
-                status = "BUILDING";
-                buildUrl = "BUILDING";
-            } else {
-                Run lb = j.getLastBuild();
-                if (lb == null) {
-                    status = "NOTBUILT";
-                    lastBuildNr = 0;
-                    buildUrl = "NOTBUILT";
-
-                } else {
-                    status = lb.getResult().toString();
-                    lastBuildNr = j.getLastBuild().getNumber();
-                    buildUrl = lb.getUrl();
-                }
-            }
-
-            ItemGroup parent = j.getParent();
-            if (parent != null && parent.getClass().getName().equals("com.cloudbees.hudson.plugins.folder.Folder")) {
-                name = parent.getFullName() + " / " + j.getName();
-            } else {
-                name = j.getName();
-            }
-
-            String dir = j.getBuildDir().toString();
-            builds = getBuildsFromJob(j);
-
-            jobs.add(new JobData(name, status, url, dir, Integer.toString(lastBuildNr),buildUrl, builds));
+        ArrayList<JobData> allJobs = new ArrayList<JobData>();
+        for(Map.Entry<String, JobData> entry : this.jobsMap.entrySet()){
+            allJobs.add(entry.getValue());
         }
-
-        this.allJobs = new ArrayList<>(jobs);
-        return jobs;
-    }
-
-    public JobData getJobByName(String jobName){
-        for(JobData job : this.allJobs){
-            if(job.JobName.value.equals(jobName)){
-                return job;
-            }
-        }
-        return null;
-    }
-
-    public ArrayList<JobData> getJobsFromProject(View project){
-        ArrayList<JobData> jobs = new ArrayList<>();
-
-        for(Object j : project.getAllItems()){
-            Job nj = (Job)j;
-            jobs.add(getJobByName(nj.getName()));
-        }
-
-        return jobs;
-    }
-
-    public synchronized Collection<View> getViews(){
-        return Jenkins.getInstance().getViews();
-    }
-
-    //Calling each view as a separate project
-    @Exported(name="allProjects")
-    public Collection<Project> getProjects(){
-        List<View> projects = new ArrayList<View>(getViews());
-        ArrayList<Project> allProjects = new ArrayList<>();
-
-        //Get name of view
-        for(View p : projects){
-            if(this.selectedViews.containsKey(p.getDisplayName())){
-                if(this.selectedViews.get(p.getDisplayName())){
-                    Project newProject = new Project(p.getDisplayName(), p.getUrl(), getJobsFromProject(p));
-                    allProjects.add(newProject);
-                }
-            }
-        }
-        this.allProjects = new ArrayList<>(allProjects);
-        return allProjects;
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class Build {
-        @Exported
-        public String jobName;
-        @Exported
-        public String buildName;
-        @Exported
-        public int number;
-        @Exported
-        public long startTime;
-        @Exported
-        public long duration;
-        @Exported
-        public String result;
-        @Exported
-        public String buildUrl;
-        @Exported
-        public ArrayList<Tag> Tags;
-
-        public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result, ArrayList<Tag> tags) {
-            this.jobName = jobName;
-            this.buildName = buildName;
-            this.number = number;
-            this.startTime = startTime;
-            this.duration = duration;
-            this.buildUrl = "../../" + buildUrl;
-            this.result = result;
-            this.Tags = tags;
-        }
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class JobData {
-        @Exported
-        public JobVar JobName = new JobVar("Name", "", "");
-        @Exported
-        public JobVar Status = new JobVar("Status", "", "");
-        @Exported
-        public JobVar JobUrl = new JobVar("URL", "", "");
-        @Exported
-        public JobVar Dir = new JobVar("Directory", "", "expandable");
-        @Exported
-        public JobVar LastBuildNr = new JobVar("Build Number", "", "expandable");
-        @Exported
-        public JobVar LastBuildUrl = new JobVar("Last Build URL", "", "expandable");
-        @Exported
-        public ArrayList<Build> Builds = new ArrayList<>();
-
-        public JobData(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, ArrayList<Build> builds) {
-            this.JobName.setValue(jobName);
-            this.Status.setValue(status);
-            this.JobUrl.setValue("../../" + jobUrl);            //jenkinsHome/...
-            this.Dir.setValue(dir);
-            this.LastBuildNr.setValue(lastBuildNr);             //jenkinsHome/...
-            this.LastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
-            this.Builds = builds;
-        }
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class JobVar{
-        @Exported
-        public String label;
-        @Exported
-        public String value;
-        @Exported
-        public String additionalInfo;
-
-        JobVar(String label, String value, String info){
-            this.label = label;
-            this.value = value;
-            this.additionalInfo = info;
-        }
-        public void setValue(String value){
-            this.value = value;
-        }
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class Project{
-        @Exported
-        public String projectName; //will be the view name
-        @Exported
-        public String projectUrl; //view url
-        @Exported
-        public ArrayList<JobData> projectJobs;  //list of all the jobs related to this project
-        @Exported
-        public String projectStatus = "projectStatus";
-
-        Project(String name, String url, ArrayList<JobData> jobs){
-            this.projectName = name;
-            this.projectUrl = "../../" + url; //jenkinsHome/...
-            this.projectJobs = jobs;
-            this.setStatus();
-        }
-
-        public void setStatus(){
-
-            int success = 0;
-            int unstable = 0;
-            int failure = 0;
-            String status = "NOTBUILT"; //consider not built by default
-
-            for(JobData job : this.projectJobs){
-                switch (job.Status.value){
-                    case "FAILURE":
-                        failure++;
-                        break;
-                    case "SUCCESS":
-                        success++;
-                        break;
-                    case "UNSTABLE":
-                        unstable++;
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            //Always consider the worst status for he project
-            if(success > 0){
-                status = "SUCCESS";
-            }if(unstable > 0){
-                status = "UNSTABLE";
-            }if(failure > 0){
-                status = "FAILURE";
-            }
-            this.projectStatus = status;
-        }
-    }
-
-    @ExportedBean(defaultVisibility = 999)
-    public class Tag{
-        @Exported
-        public String label;
-        @Exported
-        public String value;
-
-        Tag(String label, String value){
-            this.label = label;
-            this.value = value;
-        }
+        return allJobs;
     }
 }
 
-//TODO : now only display views that are 'true' on selectedViews, and their jobs
+//TODO: Get BuildHistory only from Jobs associated
