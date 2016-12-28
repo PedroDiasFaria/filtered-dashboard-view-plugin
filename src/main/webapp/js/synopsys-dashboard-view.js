@@ -218,8 +218,6 @@ function open_project(divSelector, viewUrl, project){
 
         goBackBtn = '<button class="btn btn-default btn-sm" id="goBackBtn">Go Back</button>';
 
-        console.log("Project : " + project.projectName);
-        console.log(project);
         var projectTable = createTable(project.projectJobs);
         var projectTags = createTags(project.projectJobs);
         var tagsFilter = createTagsFilter(projectTags);
@@ -227,6 +225,7 @@ function open_project(divSelector, viewUrl, project){
         project_container_div =
         '<div id="'+ project_container_id +'">' +
         '<div><h1><strong>' + project.projectName + '</strong></h1></div>' +
+        '<br><div class="container col-sm-12">' + goBackBtn +  '</div>' +
         '<br><div class="container col-sm-12">' + tagsFilter + '</div>' +
         '<br><div class="container col-sm-12">' + projectTable + '</div>' +
         '<br><div class="container col-sm-12">' + goBackBtn +  '</div>' +
@@ -245,9 +244,9 @@ function open_project(divSelector, viewUrl, project){
             $('.filter').each(function (index, elem) {
                 if (elem.checked) filter.push($(elem).val());
             });
-            var filterString = filter.join(' ');
-            console.log(filterString);
-            table.search(filterString, true).draw();
+            var filterString = filter.join('|');
+            var filterRegex = '^(?=.*?(' + filterString + ')).*?';
+            table.search(filterRegex, true).draw();
             table.search('');                   //clears the 'search' form
         });
 
@@ -262,26 +261,17 @@ function open_project(divSelector, viewUrl, project){
 
             this.remove();
 
-           console.log('Removed all from project_container');
-
           }, false);
-
-
-    console.log("open_project finish");
 }
 
 function hide_dashboard(){
     var main_dashboard = document.getElementById('main-dashboard');
     main_dashboard.style.display = 'none';
-
-    console.log("dashboard hidden");
 }
 
 function restore_dashboard(){
     var main_dashboard = document.getElementById('main-dashboard');
     main_dashboard.style.display = 'block';
-
-    console.log("dashboard restored");
 }
 
 function getProjectByName(data, projectName) {
@@ -304,10 +294,6 @@ var createTable = function(projectJobs){
             newCol.jobName = job.JobName.value;
             newCol.url = job.JobUrl.value;
             projectTable.columns.push(newCol);
-            console.log("job: ");
-            console.log(job);
-            console.log("job.Builds: ");
-            console.log(job.Builds);
             for(let build of job.Builds){
                 newCell = {url : "", result : "", jobName : "", tags : ""};
                 newCell.url = build.buildUrl;
@@ -327,7 +313,7 @@ var createTable = function(projectJobs){
         var tbody = "";
 
         for(let column of projectTable.columns){
-            thead+='<th class="no-sort" style="width: 10%"><div><span><a href="'+ column.url +'" target="_blank"><h4>' + column.jobName + '</h4></a></span></div></th>';
+            thead+='<th class="no-sort job-name-header"><div><span><a href="'+ column.url +'" target="_blank"><h4>' + column.jobName + '</h4></a></span></div></th>';
         }
 
         for(var buildNr in  projectTable.rows){
@@ -344,8 +330,8 @@ var createTable = function(projectJobs){
                             }else{
                                 newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
                             }
-                            newCell+= '<span class="callTags" style="display:none">';
-                            //newCell+= '<span class="callTags">';        //TODO Testing metadata filter search
+                            //newCell+= '<span class="callTags" style="display:none">';
+                            newCell+= '<span class="callTags"><b>Tags: </b>';        //TODO Testing metadata filter search
                             for(let tag of cell.tags){
                                 newCell+= tag.value + ' ';
                             }
@@ -446,5 +432,4 @@ var tableClass = function(){
 }
 
 //http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
-//TODO filter with OR rule
 //TODO show line by tag rule

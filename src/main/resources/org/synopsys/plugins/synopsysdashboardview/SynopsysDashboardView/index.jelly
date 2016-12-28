@@ -37,8 +37,13 @@
         </head>
         <body class="height100perc">
             <a href="${rootURL}/${it.url}configure" alt="Configure view">
-                <div class="abs-top-right">
+                <div class="abs-top-right-conf">
                     <span class="glyphicon glyphicon-cog"></span>
+                </div>
+            </a>
+            <a href="${rootURL}" alt="Home">
+                <div class="abs-top-right-home">
+                    <span class="glyphicon glyphicon-home"></span>
                 </div>
             </a>
             <div class="container-fluid height100perc" id="main-dashboard">

@@ -172,13 +172,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             this.selectedViews = new HashMap<String, Boolean>();
         }
 
-        if(jobsInProjectMap == null){
-            this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
-        }
+        this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
 
-        if(jobsMap == null){
-            this.jobsMap = new TreeMap<String, JobData>();
-        }
+        this.jobsMap = new TreeMap<String, JobData>();
 
         if (views == null) {
             views = new CopyOnWriteArrayList<View>();
@@ -456,7 +452,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             URL url = new URL(requestString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            if(connection.getResponseCode() != HttpURLConnection.HTTP_NOT_FOUND) {
+            if(connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder resultString = new StringBuilder();
                 String response;
