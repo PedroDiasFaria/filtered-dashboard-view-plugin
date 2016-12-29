@@ -22,8 +22,10 @@ public class Project{
     Project(String name, String url, ArrayList<JobData> jobs){
         this.projectName = name;
         this.projectUrl = "../../" + url; //jenkinsHome/...
-        this.projectJobs = jobs;
-        this.setStatus();
+        if(jobs != null) {
+            this.projectJobs = jobs;
+            this.setStatus();
+        }
     }
 
     public void setStatus(){

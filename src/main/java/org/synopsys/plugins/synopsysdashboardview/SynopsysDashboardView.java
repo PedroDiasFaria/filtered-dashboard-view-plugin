@@ -172,13 +172,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             this.selectedViews = new HashMap<String, Boolean>();
         }
 
+        //Forces a reset on the Maps, to ensure changes are apllied
         this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
-
         this.jobsMap = new TreeMap<String, JobData>();
 
-        if (views == null) {
+        //if (views == null) {
             views = new CopyOnWriteArrayList<View>();
-        }
+        //}
 
         if (views.isEmpty()) {
             // preserve the non-empty invariant
@@ -243,7 +243,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     @Override
     public View getPrimaryView(){
-
             View v = getView(defaultViewName);
             if(v==null) // fallback
                 v = views.get(0);
@@ -342,7 +341,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         ArrayList<Project> allProjects = new ArrayList<Project>();
 
         for(View p : projects){
-            if(this.selectedViews.containsKey(p.getViewName())){
+            if(this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())){   //Views of this class aren't shown inside it
                 if(this.selectedViews.get(p.getViewName())){
                     Project newProject = new Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
                     allProjects.add(newProject);
@@ -486,44 +485,48 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return tags;
     }
 
-    //Gets last 'buildHistorySize' builds
+    //Gets last 'buildHistorySize' builds from the Jobs in Projects displayed on this Dashboard
     @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
         try {
             List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
-            RunList builds = new RunList(jobs).limit(getBuildHistorySize()); //no limit of builds, get all for now //TODO check below
-
+            RunList builds = new RunList(jobs);
+            int buildHistorySize = 0;
             ArrayList<Build> l = new ArrayList<Build>();
             Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
             for (Object b : builds) {
-                Run build = (Run) b;
-                Job job = build.getParent();
-                String buildUrl = build.getUrl();
+                if(buildHistorySize < getBuildHistorySize()) {
+                    Run build = (Run) b;
+                    Job job = build.getParent();
+                    if(jobsMap.containsKey(job.getName())) {
+                        String buildUrl = build.getUrl();
 
-                // Skip Maven modules. They are part of parent Maven project
-                if (job.getClass().getName().equals("hudson.maven.MavenModule"))
-                    continue;
+                        // Skip Maven modules. They are part of parent Maven project
+                        if (job.getClass().getName().equals("hudson.maven.MavenModule"))
+                            continue;
 
-                // If filtering is enabled, skip jobs not matching the filter
-                if (r != null && !r.matcher(job.getName()).find())
-                    continue;
+                        // If filtering is enabled, skip jobs not matching the filter
+                        if (r != null && !r.matcher(job.getName()).find())
+                            continue;
 
-                Result result = build.getResult();
-                //HttpRequest to Metadata Plugin (doGet)
-                ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+                        Result result = build.getResult();
+                        //HttpRequest to Metadata Plugin (doGet)
+                        ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
 
-                l.add(new Build(job.getName(),
-                        build.getFullDisplayName(),
-                        build.getNumber(),
-                        build.getStartTimeInMillis(),
-                        build.getDuration(),
-                        buildUrl == null ? "null" : buildUrl,
-                        result == null ? "BUILDING" : result.toString(),
-                        tags));
+                        l.add(new Build(job.getName(),
+                                build.getFullDisplayName(),
+                                build.getNumber(),
+                                build.getStartTimeInMillis(),
+                                build.getDuration(),
+                                buildUrl == null ? "null" : buildUrl,
+                                result == null ? "BUILDING" : result.toString(),
+                                tags));
+                        buildHistorySize++;
+                    }
+                }else
+                    break;
             }
-
-            //this.allBuilds = new ArrayList<>(l); //-> should be "last X builds per job" //TODO
             return l;
         }catch (Error e){
             e.printStackTrace();

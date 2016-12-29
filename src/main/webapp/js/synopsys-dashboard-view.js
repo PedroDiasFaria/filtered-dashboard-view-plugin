@@ -252,16 +252,12 @@ function open_project(divSelector, viewUrl, project){
 
         var gBB = document.getElementById('goBackBtn'); //goBackBtn listener
         var projectDiv = document.getElementById(project_container_id);
-
-          gBB.addEventListener("click", function(e){
+        gBB.addEventListener("click", function(e){
             restore_dashboard();
             project_container.style.display = 'none';
-
             projectDiv.remove();
-
             this.remove();
-
-          }, false);
+        }, false);
 }
 
 function hide_dashboard(){
@@ -331,7 +327,7 @@ var createTable = function(projectJobs){
                                 newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
                             }
                             //newCell+= '<span class="callTags" style="display:none">';
-                            newCell+= '<span class="callTags"><b>Tags: </b>';        //TODO Testing metadata filter search
+                            newCell+= '<span class="callTags"><b>Tags: </b>';
                             for(let tag of cell.tags){
                                 newCell+= tag.value + ' ';
                             }
@@ -415,8 +411,6 @@ var createTagsFilter = function(tags){
             tagsDiv+='</ul></div>';
         }
     }
-
-
     tagsDiv+= tags + '</div><br>';
     return tagsDiv;
 }
