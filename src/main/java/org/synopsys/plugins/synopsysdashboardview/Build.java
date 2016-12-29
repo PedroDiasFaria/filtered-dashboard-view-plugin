@@ -35,6 +35,6 @@ public class Build {
         this.duration = duration;
         this.buildUrl = "../../" + buildUrl;
         this.result = result;
-        this.Tags = tags;
+        this.Tags = new ArrayList<Tag>(tags);
     }
 }

@@ -216,7 +216,7 @@ function open_project(divSelector, viewUrl, project){
 
         project_container_id = project.projectName + '_project_container';
 
-        goBackBtn = '<button class="btn btn-default btn-sm" id="goBackBtn">Go Back</button>';
+        goBackBtn = '<button class="btn btn-default btn-sm goBackBtn" id="goBackBtn">Go Back</button>';
 
         var projectTable = createTable(project.projectJobs);
         var projectTags = createTags(project.projectJobs);
@@ -233,7 +233,7 @@ function open_project(divSelector, viewUrl, project){
 
         $(project_container).append(project_container_div);
         var table = $('#project-table').DataTable({
-            "order" : [0, 'desc'],
+            "order" : [0, 'asc'],
             "sPaginationType": 'full_numbers',
             "aoColumnDefs" : [
                 { 'bSortable': false, 'aTargets': ['no-sort'] }
@@ -250,14 +250,14 @@ function open_project(divSelector, viewUrl, project){
             table.search('');                   //clears the 'search' form
         });
 
-        var gBB = document.getElementById('goBackBtn'); //goBackBtn listener
         var projectDiv = document.getElementById(project_container_id);
-        gBB.addEventListener("click", function(e){
-            restore_dashboard();
-            project_container.style.display = 'none';
-            projectDiv.remove();
-            this.remove();
-        }, false);
+        var gBB = $('.goBackBtn');
+        gBB.on("click", function(){
+                    restore_dashboard();
+                    project_container.style.display = 'none';
+                    projectDiv.remove();
+                    this.remove();
+        });
 }
 
 function hide_dashboard(){
@@ -281,27 +281,32 @@ function getProjectByName(data, projectName) {
 
 //populate the table
 //there can be rows(builds) without any value for its job
-var createTable = function(projectJobs){
+var createTable = function(projectJobs, tableSize){
 
         var projectTable = new tableClass();
 
+//TODO : redo this
+
         for(let job of projectJobs){
+            var rowIndex = 1;
             newCol = {jobName : "", url: ""};
             newCol.jobName = job.JobName.value;
             newCol.url = job.JobUrl.value;
             projectTable.columns.push(newCol);
             for(let build of job.Builds){
-                newCell = {url : "", result : "", jobName : "", tags : ""};
+                newCell = {url : "", result : "", jobName : "", tags : "", buildNr : ""};
                 newCell.url = build.buildUrl;
                 newCell.result = build.result;
                 newCell.jobName = job.JobName.value;
+                newCell.buildNr = build.number;
                 newCell.tags = build.Tags;
-                if(projectTable.rows[build.number])
-                    projectTable.rows[build.number].push(newCell);
+                if(projectTable.rows[rowIndex])
+                    projectTable.rows[rowIndex].push(newCell);
                 else{
-                    projectTable.rows[build.number] = [];
-                    projectTable.rows[build.number].push(newCell);
+                    projectTable.rows[rowIndex] = [];
+                    projectTable.rows[rowIndex].push(newCell);
                     }
+                rowIndex++;
             }
         }
 
@@ -324,7 +329,8 @@ var createTable = function(projectJobs){
                             if(cell.url == "null"){
                                 newCell+= '<a href="javascript:;"><div>' + cell.result+ '</div>';
                             }else{
-                                newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+ '</div>';
+                                newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+
+                                            '<br>#' + cell.buildNr + '</div>';
                             }
                             //newCell+= '<span class="callTags" style="display:none">';
                             newCell+= '<span class="callTags"><b>Tags: </b>';
@@ -346,7 +352,7 @@ var createTable = function(projectJobs){
 
         table =             '<table id="project-table" class="project-table table table-striped" cellspacing="0" width="100%">' +
                                 '<thead>'+
-                                    '<tr><th style="width: 3%" class="text-left "><h4>Build # / Job</h4></th>' + thead + '</tr>'+
+                                    '<tr><th style="width: 3%" class="text-left "><h4>Row#</h4></th>' + thead + '</tr>'+
                                 '</thead>'+
                                 '<tbody>'+
                                     tbody +

@@ -14,7 +14,8 @@
                     <j:if test="${!it.selectedViews.containsKey(view.displayName)}">
                         ${it.selectedViews.put(view.displayName, false)}
                     </j:if>
-                    <j:if test="${!(view.displayName == it.viewName)}">
+                    <!-- You can't select THIS view NOR a view of the same class -->
+                    <j:if test="${!(view.displayName == it.viewName) and !view.getClass().equals(it.getClass())}">
                     <f:checkbox name="${view.displayName}" title="${view.displayName}" checked="${it.selectedViews.get(view.displayName)}"/>
                     <br/>
                     </j:if>

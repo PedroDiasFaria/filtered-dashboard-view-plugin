@@ -17,11 +17,11 @@ public class JobData {
     @Exported
     public JobVar JobUrl = new JobVar("URL", "", "");
     @Exported
-    public JobVar Dir = new JobVar("Directory", "", "expandable");
+    public JobVar Dir = new JobVar("Directory", "", "");
     @Exported
     public JobVar LastBuildNr = new JobVar("Build Number", "", "expandable");
     @Exported
-    public JobVar LastBuildUrl = new JobVar("Last Build URL", "", "expandable");
+    public JobVar LastBuildUrl = new JobVar("Last Build URL", "", "");
     @Exported
     public ArrayList<Build> Builds = new ArrayList<Build>();
 

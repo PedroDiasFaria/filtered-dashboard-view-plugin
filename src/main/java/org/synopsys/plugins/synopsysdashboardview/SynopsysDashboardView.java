@@ -53,7 +53,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //private transient ViewGroupMixIn viewGroupMixIn;
     private String defaultViewName;
 
-     private ArrayList<Build> allBuilds = new ArrayList<Build>();
+    private ArrayList<Build> allBuilds = new ArrayList<Build>();
     private int projectBuildTableSize;
 
     private HashMap<String, Boolean> selectedViews;
@@ -79,7 +79,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         this.selectedViews = new HashMap<String, Boolean>();
         this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
         this.jobsMap = new TreeMap<String, JobData>();
-        this.projectBuildTableSize = 15;
+        this.projectBuildTableSize = 5;
     }
 
     @Override
@@ -166,7 +166,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             layoutHeightRatio = "6040";
 
         if (projectBuildTableSize == 0)
-            projectBuildTableSize = 15;
+            projectBuildTableSize = 5;
 
         if(selectedViews == null){
             this.selectedViews = new HashMap<String, Boolean>();
@@ -296,8 +296,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     }
 
     public Api getApi() {
+        getAllProjects();
         getBuildHistory();
-        getProjects();
         return new Api(this);
     }
 
@@ -336,9 +336,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     //Calling each view as a separate project
     @Exported(name="allProjects")
-    public Collection<Project> getProjects(){
+    public Collection<Project> getAllProjects(){
+        //System.out.println("getAllProjects:     "+new Date().toString());
         List<View> projects = new ArrayList<View>(getViews());
         ArrayList<Project> allProjects = new ArrayList<Project>();
+        //this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
+        //this.jobsMap = new TreeMap<String, JobData>();
 
         for(View p : projects){
             if(this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())){   //Views of this class aren't shown inside it
@@ -373,9 +376,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public JobData getJobByName(String jobName){
 
-        if(jobsMap.containsKey(jobName)){
-            return jobsMap.get(jobName);
-        }else {
+//        if(this.jobsMap.containsKey(jobName)){
+//            return this.jobsMap.get(jobName);
+//        }else {
             try {
                 List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
                 for (Job j : jenkinsJobs) {
@@ -435,13 +438,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             } catch (Error e) {
                 e.printStackTrace();
             }
-        }
+  //      }
         return null;
     }
 
     public ArrayList<Tag> getBuildTags(int buildNr, String jobName){
         ArrayList<Tag> tags = new ArrayList<Tag>();
-
         try {
             String requestString;
             String jenkinsUrl = Jenkins.getInstance().getRootUrl();
@@ -453,7 +455,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             connection.setRequestMethod("GET");
             if(connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder resultString = new StringBuilder();
+                StringBuffer resultString = new StringBuffer();
                 String response;
 
                 while ((response = rd.readLine()) != null) {
@@ -478,6 +480,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                     }
                 }
             }
+        connection.disconnect();
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -488,6 +491,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Gets last 'buildHistorySize' builds from the Jobs in Projects displayed on this Dashboard
     @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
+        //System.out.println("getBuildHistory:     "+new Date().toString());
         try {
             List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
             RunList builds = new RunList(jobs);
@@ -512,7 +516,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
                         Result result = build.getResult();
                         //HttpRequest to Metadata Plugin (doGet)
-                        ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+                        ArrayList<Tag> tags = new ArrayList<Tag>(getBuildTags(build.getNumber(), job.getName()));
 
                         l.add(new Build(job.getName(),
                                 build.getFullDisplayName(),

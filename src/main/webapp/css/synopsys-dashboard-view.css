@@ -82,12 +82,20 @@ th, td {
     background-color: #bd2d29;
 }
 
+.ABORTED{
+    background-color: #bd2d29;
+}
+
 .UNSTABLE{
     background-color: #d38312;
 }
 
 .SUCCESS{
     background-color: #2f6a2f;
+}
+
+.BUILDING{
+    background-color: #d38312;
 }
 
 .dataElemValue{
