@@ -237,16 +237,22 @@ function open_project(divSelector, viewUrl, project){
             "sPaginationType": 'full_numbers',
             "aoColumnDefs" : [
                 { 'bSortable': false, 'aTargets': ['no-sort'] }
-            ]
+            ],
+            searchHighlight: true
         });
+
         $('input.filter').on('change', function () {
             var filter = [];
             $('.filter').each(function (index, elem) {
                 if (elem.checked) filter.push($(elem).val());
             });
-            var filterString = filter.join('|');
-            var filterRegex = '^(?=.*?(' + filterString + ')).*?';
-            table.search(filterRegex, true).draw();
+            var filterString = filter.join(' ');
+            //If you want to search by 'OR' instead of 'AND'
+            //var filterString = filter.join('|');
+            //var filterRegex = "";
+            //if(filterString)
+            //     filterRegex = '^(?=.*?(' + filterString + ')).*?';
+            table.search(filterString, true).draw();
             table.search('');                   //clears the 'search' form
         });
 
@@ -285,8 +291,6 @@ var createTable = function(projectJobs, tableSize){
 
         var projectTable = new tableClass();
 
-//TODO : redo this
-
         for(let job of projectJobs){
             var rowIndex = 1;
             newCol = {jobName : "", url: ""};
@@ -317,11 +321,12 @@ var createTable = function(projectJobs, tableSize){
             thead+='<th class="no-sort job-name-header"><div><span><a href="'+ column.url +'" target="_blank"><h4>' + column.jobName + '</h4></a></span></div></th>';
         }
 
-        for(var buildNr in  projectTable.rows){
-            if(projectTable.rows.hasOwnProperty(buildNr)){
-                tbody+= '<tr><td class="build-nr">' + buildNr + '</td>';
+        for(var rowNr in  projectTable.rows){
+            if(projectTable.rows.hasOwnProperty(rowNr)){
+                //You can search by 'row:nr' to display only that row: e.g. row:5
+                tbody+= '<tr><td class="row-nr"><span style="display:none">row:'+ rowNr +'</span>' + rowNr + '</td>';
                 for(let column of projectTable.columns){
-                    rowArray = projectTable.rows[buildNr];
+                    rowArray = projectTable.rows[rowNr];
                     newCell = "";
                     for(let cell of rowArray){
                         if(cell.jobName == column.jobName ){
@@ -329,15 +334,19 @@ var createTable = function(projectJobs, tableSize){
                             if(cell.url == "null"){
                                 newCell+= '<a href="javascript:;"><div>' + cell.result+ '</div>';
                             }else{
-                                newCell+= '<a href="'+ cell.url +'" target="_blank"><div>' + cell.result+
+                                newCell+= '<a href="'+ cell.url +'" target="_blank" style="text-decoration:none"><div>' + cell.result+
                                             '<br>#' + cell.buildNr + '</div>';
                             }
                             //newCell+= '<span class="callTags" style="display:none">';
-                            newCell+= '<span class="callTags"><b>Tags: </b>';
-                            for(let tag of cell.tags){
-                                newCell+= tag.value + ' ';
+                            //only show if there are tags
+                            if(cell.tags.length > 0 ){
+                                newCell+= '<span class="callTags"><b>Tags: </b>';
+                                for(let tag of cell.tags){
+                                    newCell+= tag.value + ' ';
+                                }
+                                newCell+= '</span>';
                             }
-                            newCell+= '</span></a></td>';
+                            newCell+= '</a></td>';
                         }
                     }
                     if(newCell){
@@ -406,18 +415,18 @@ var createTagsFilter = function(tags){
             values = tags[tag];
                 for(let value of values){
                    id = tag +'_'+ value;
-                    tagsDiv+= '<li class="list-group-item">';
+                    tagsDiv+=   '<li class="list-group-item">';
                         tagsDiv+= value;
-                        tagsDiv+= '<div class="material-switch pull-right">';
-                            tagsDiv+= '<input id="'+ id +'" type="checkbox" class="filter" value="' + value + '" name="'+ id +'"/>' ;
-                            tagsDiv+= '<label for="' + id + '" class="label-primary"></label>';
-                        tagsDiv+= '<div>';
-                    tagsDiv+= '</li>';
+                        tagsDiv+=   '<div class="material-switch pull-right">'+
+                                        '<input id="'+ id +'" type="checkbox" class="filter" value="' + value + '" name="'+ id +'"/>'+
+                                        '<label for="' + id + '" class="label-primary"></label>'+
+                                    '<div>'+
+                                '</li>';
               }
             tagsDiv+='</ul></div>';
         }
     }
-    tagsDiv+= tags + '</div><br>';
+    tagsDiv+= '</div><br>';
     return tagsDiv;
 }
 

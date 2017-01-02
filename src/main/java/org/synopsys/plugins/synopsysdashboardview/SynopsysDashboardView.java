@@ -24,10 +24,10 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import java.net.*;
-import java.io.*;
-
 import org.kohsuke.stapler.*;
+
+import com.sonyericsson.hudson.plugins.metadata.model.*;
+import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
 
 //Metadata
 
@@ -87,6 +87,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return new ArrayList<TopLevelItem>();
     }
 
+    //TODO make it more robust
     @Override
     protected void submit(StaplerRequest req) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
@@ -279,10 +280,11 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public void onViewRenamed(View view, String oldName, String newName){
     }
-    /**********/
 
     @Override
-    public boolean hasPermission(final Permission p) { return true; }
+    public boolean hasPermission(final Permission p) {
+        return true;
+    }
 
     /**
      * This descriptor class is required to configure the View Page
@@ -337,11 +339,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Calling each view as a separate project
     @Exported(name="allProjects")
     public Collection<Project> getAllProjects(){
-        //System.out.println("getAllProjects:     "+new Date().toString());
         List<View> projects = new ArrayList<View>(getViews());
         ArrayList<Project> allProjects = new ArrayList<Project>();
-        //this.jobsInProjectMap = new TreeMap<String, ArrayList<String>>();
-        //this.jobsMap = new TreeMap<String, JobData>();
 
         for(View p : projects){
             if(this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())){   //Views of this class aren't shown inside it
@@ -376,9 +375,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
     public JobData getJobByName(String jobName){
 
-//        if(this.jobsMap.containsKey(jobName)){
-//            return this.jobsMap.get(jobName);
-//        }else {
             try {
                 List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
                 for (Job j : jenkinsJobs) {
@@ -438,60 +434,36 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             } catch (Error e) {
                 e.printStackTrace();
             }
-  //      }
         return null;
     }
 
+    //Gets all child values defined in the Metadata Plugin, and creates tags according their values
     public ArrayList<Tag> getBuildTags(int buildNr, String jobName){
         ArrayList<Tag> tags = new ArrayList<Tag>();
-        try {
-            String requestString;
-            String jenkinsUrl = Jenkins.getInstance().getRootUrl();
-            String encodedJobName = java.net.URLEncoder.encode(jobName, "UTF-8").replace("+", "%20");
-            String metadataApiRequest = "metadata-httpcli/get?job=" + encodedJobName + "&build=" + buildNr;
-            requestString = jenkinsUrl + metadataApiRequest;
-            URL url = new URL(requestString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            if(connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuffer resultString = new StringBuffer();
-                String response;
+        MetadataBuildAction metadataBuild = Jenkins.getInstance().getItemByFullName(jobName, Job.class).getBuildByNumber(buildNr).getAction(MetadataBuildAction.class);
 
-                while ((response = rd.readLine()) != null) {
-                    resultString.append(response);
-                }
-                rd.close();
-
-                JSONArray jsonArray = (JSONArray) JSONSerializer.toJSON(resultString.toString());
-
-                for (int i = 0; i < jsonArray.size(); i++) {
-                    String name = jsonArray.getJSONObject(i).get("name").toString();
-                    switch (name) {
-                        //Hide metadata-plugin predefined tags
-                        case "job-info":
-                            break;
-                        case "build":
-                            break;
-                        default:
-                            String value = jsonArray.getJSONObject(i).get("value").toString();
-                            tags.add(new Tag(name.toUpperCase(), value.toLowerCase()));
-                            break;
-                    }
+        if(metadataBuild != null) {
+            Collection<String> metadataNames = metadataBuild.getChildNames();
+            for (String name : metadataNames) {
+                switch (name) {
+                    //Hide metadata-plugin predefined tags
+                    case "job-info":
+                        break;
+                    case "build":
+                        break;
+                    default:
+                        MetadataValue value = metadataBuild.getChild(name);
+                        tags.add(new Tag(name.toUpperCase(), value.getValue().toString().toLowerCase()));
+                        break;
                 }
             }
-        connection.disconnect();
-        }catch (IOException e){
-            e.printStackTrace();
         }
-
         return tags;
     }
 
     //Gets last 'buildHistorySize' builds from the Jobs in Projects displayed on this Dashboard
     @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
-        //System.out.println("getBuildHistory:     "+new Date().toString());
         try {
             List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
             RunList builds = new RunList(jobs);
@@ -573,5 +545,3 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return allJobs;
     }
 }
-
-//TODO: Get BuildHistory only from Jobs associated
