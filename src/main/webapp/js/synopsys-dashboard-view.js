@@ -35,7 +35,7 @@ function format_interval(iv) {
 function reload_jenkins_build_queue(tableSelector, jenkinsUrl, buildQueueSize) {
   $.getJSON( jenkinsUrl + '/queue/api/json', function( data ) {
     // Remove all existing rows
-    $(tableSelector + ' tbody').find('tr').remove(); 
+    $(tableSelector + ' tbody').find('tr').remove();
     i = 0;
     $.each( data.items, function( key, val ) {
       i++;
@@ -98,7 +98,7 @@ function reload_jenkins_build_history(tableSelector, viewUrl, buildHistorySize) 
         default:
           classes = '';
       }
-      newRow = '<tr class="' + classes + '"><td class="text-left">' + jobName + '</td><td>' + val.number + '</td><td>' + format_date(dt) + '</td><td>' + format_interval(val.duration) + '</td></tr>';
+      newRow = '<tr class="' + classes + '"><td class="text-left">' + jobName + '</td><td><a href="'+ val.buildUrl +'" >' + val.number + '</a></td><td>' + format_date(dt) + '</td><td>' + format_interval(val.duration) + '</td></tr>';
       $(tableSelector + ' tbody').append(newRow);
     });
   });
@@ -224,7 +224,7 @@ function open_project(divSelector, viewUrl, project){
 
         project_container_div =
         '<div id="'+ project_container_id +'">' +
-        '<div><h1><strong>' + project.projectName + '</strong></h1></div>' +
+        '<div><h1><strong>&nbsp&nbsp' + project.projectName + '</strong></h1></div>' +
         '<br><div class="container col-sm-12">' + goBackBtn +  '</div>' +
         '<br><div class="container col-sm-12">' + tagsFilter + '</div>' +
         '<br><div class="container col-sm-12">' + projectTable + '</div>' +
@@ -241,17 +241,36 @@ function open_project(divSelector, viewUrl, project){
             searchHighlight: true
         });
 
+
+
         $('input.filter').on('change', function () {
             var filter = [];
             $('.filter').each(function (index, elem) {
                 if (elem.checked) filter.push($(elem).val());
             });
             var filterString = filter.join(' ');
-            //If you want to search by 'OR' instead of 'AND'
+
+            //If you want to search by 'OR' instead of 'AND' in the filters:
             //var filterString = filter.join('|');
             //var filterRegex = "";
             //if(filterString)
-            //     filterRegex = '^(?=.*?(' + filterString + ')).*?';
+              //   filterString = '^(?=.*?(' + filterString + ')).*?';
+
+            //Hides columns that don't have selected filters
+            table.columns().every( function () {
+                if(this.index() > 0 ){
+                    this.visible(true);
+                    if(filter.length > 0){
+                        var found = false;
+                        filter.forEach( finding => {
+                            if(table.columns().data()[this.index()].join().includes(finding))
+                                found = true;
+                        })
+                        this.visible(found);
+                    }
+                }
+            } );
+
             table.search(filterString, true).draw();
             table.search('');                   //clears the 'search' form
         });
@@ -439,6 +458,3 @@ var tableClass = function(){
     this.columns = [];
     this.rows = [];
 }
-
-//http://stackoverflow.com/questions/28940160/filtering-list-of-items-with-jquery-checkboxes
-//TODO show line by tag rule
