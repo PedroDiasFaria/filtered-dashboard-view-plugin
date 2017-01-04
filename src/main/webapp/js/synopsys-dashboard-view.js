@@ -1,3 +1,27 @@
+/*
+ *  The MIT License
+ *
+ *  Copyright 2017 Pedro Faria. All rights reserved.
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
 function format_date(dt) {
   return dt.getFullYear()
     + '-' + (dt.getMonth()<9?'0':'') + (dt.getMonth() + 1)
@@ -161,8 +185,7 @@ function reload_jenkins_projects(divSelector, viewUrl, buttonClass){
         $(divSelector + ' button').remove();
 
         $.each(data.allProjects, function(key, val){
-            //get jobs from view:   val.name
-
+           //get jobs from view:   val.name
           switch (val.projectStatus) {
             case 'SUCCESS':
               classes = 'btn-success';
@@ -180,8 +203,6 @@ function reload_jenkins_projects(divSelector, viewUrl, buttonClass){
             case 'BUILDING':
               classes = 'btn-info invert-text-color';
               break;
-
-            //REMOVE ALL AND THIS.NAME
             case 'All':
               classes = 'btn-warning'
               break;
@@ -241,8 +262,6 @@ function open_project(divSelector, viewUrl, project){
             searchHighlight: true
         });
 
-
-
         $('input.filter').on('change', function () {
             var filter = [];
             $('.filter').each(function (index, elem) {
@@ -251,10 +270,12 @@ function open_project(divSelector, viewUrl, project){
             var filterString = filter.join(' ');
 
             //If you want to search by 'OR' instead of 'AND' in the filters:
-            //var filterString = filter.join('|');
-            //var filterRegex = "";
-            //if(filterString)
-              //   filterString = '^(?=.*?(' + filterString + ')).*?';
+            /*
+            var filterString = filter.join('|');
+            var filterRegex = "";
+            if(filterString)
+              filterString = '^(?=.*?(' + filterString + ')).*?';       //'OR' regex
+            */
 
             //Hides columns that don't have selected filters
             table.columns().every( function () {

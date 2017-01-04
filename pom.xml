@@ -44,7 +44,7 @@
   <!-- If you want this to appear on the wiki page: -->
   <developers>
     <developer>
-      <id>pfaria</id>
+      <id>PedroFaria</id>
       <name>Pedro Faria</name>
       <email>pedrodiasfaria@gmail.com</email>
     </developer>
@@ -56,7 +56,14 @@
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
   </scm>
-   -->
+  -->
+
+  <scm>
+    <connection>scm:git:git://github.com/PedroDiasFaria/snps-thesis.git</connection>
+    <developerConnection>scm:git:git@github.com:PedroDiasFaria/snps-thesis.git</developerConnection>
+    <url>https://github.com/PedroDiasFaria/snps-thesis</url>
+  </scm>
+
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>

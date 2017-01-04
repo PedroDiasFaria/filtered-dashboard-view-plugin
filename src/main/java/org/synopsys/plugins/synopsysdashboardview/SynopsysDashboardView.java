@@ -1,3 +1,32 @@
+/*
+ *  The MIT License
+ *
+ *  Copyright 2017 Pedro Faria. All rights reserved.
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
+/*
+ *  Plugin based from 'Mission Control Plugin' - by Andrey Shevtsov
+ *  source: https://wiki.jenkins-ci.org/display/JENKINS/Mission+Control+Plugin
+ */
+
 package org.synopsys.plugins.synopsysdashboardview;
 
 import hudson.Extension;
@@ -29,12 +58,18 @@ import org.kohsuke.stapler.*;
 import com.sonyericsson.hudson.plugins.metadata.model.*;
 import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
 
-//Metadata
+@SuppressWarnings({"unused", "all"})
 
 /**
- * Created by faria on 10-Oct-16.
+ * A Dashboard View that displays selected Views from Jekins instance.
+ * Displays Views as Projects, Jobs inside those Views and their respective Builds
+ * Displays a Build History and a Build Queue
+ *
+ * Metadata-Plugin is necessary to create Tags for each Build
+ * This are latter used to filter searches on the Dashboard
+ *
+ * @author Pedro Faria  &lt;pedrodiasfaria@gmail.com&gt;
  */
-@SuppressWarnings({"unused", "all"})
 public class SynopsysDashboardView extends View implements ViewGroup, StaplerProxy{
 
     //From missioncontrol
@@ -49,24 +84,33 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private String filterRegex;
 
     //Allways hold at least one view
+    /** All the Views on this Jenkins instance */
     private CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
     //private transient ViewGroupMixIn viewGroupMixIn;
     private String defaultViewName;
 
+    /** All Builds in this View */
     private ArrayList<Build> allBuilds = new ArrayList<Build>();
     private int projectBuildTableSize;
 
+    /** All selected Views to display */
     private HashMap<String, Boolean> selectedViews;
+    /** Map of Views associated with their Jobs */
     private Map<String, ArrayList<String>> jobsInProjectMap;
+    /** Map of Jobs associated with their custom class JobData */
     private Map<String, JobData> jobsMap;
-    /******/
+
+    /**
+     * Dashboard constructor
+     * @param name this view name
+     */
     @DataBoundConstructor
-    public SynopsysDashboardView(String name, String viewName) {
+    public SynopsysDashboardView(String name) {
         super(name);
 
         //From missioncontrol
         /**************/
-        this.viewName = viewName;
+        this.viewName = name;
         this.fontSize = 16;
         this.buildQueueSize = 10;
         this.buildHistorySize = 16;
@@ -113,16 +157,20 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         }
         this.statusButtonSize = json.getString("statusButtonSize");
         this.layoutHeightRatio = json.getString("layoutHeightRatio");
+        /**********************/
+
         JSONObject selectedViewsJSON = json.getJSONObject("selectedViews");
         selectViews(selectedViewsJSON);
-
         this.jobsMap = new TreeMap<>();
         this.jobsInProjectMap = new TreeMap<>();
-        /************************/
 
         save();
     }
 
+    /**
+     *
+     * @param selectedViewsJSON JSON Map with the Views to be displayed in the Dashboard
+     */
     public void selectViews(JSONObject selectedViewsJSON){
         Iterator<?> keys = selectedViewsJSON.keys();
         while(keys.hasNext()){
@@ -142,10 +190,11 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return false;
     }
 
-
-    /********************/
-    //Bellow all from mission control:
-    /********************/
+    /**
+     * Forces some default values
+     * Refreshes Jobs and Builds that suffered changes
+     * @return this View
+     */
     protected Object readResolve() {
 
         if (getBuildsLimit == 0)
@@ -336,7 +385,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     /**DashboardLogic**/
     /******************/
 
-    //Calling each view as a separate project
+    /**
+     * Treat each View as a separate Project
+     * Gets all Projects associated to this Dashboard View
+     *
+     * @return allProjects
+     */
     @Exported(name="allProjects")
     public Collection<Project> getAllProjects(){
         List<View> projects = new ArrayList<View>(getViews());
@@ -353,6 +407,13 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return allProjects;
     }
 
+    /**
+     * Populates a Project with its associated Jobs and
+     * respective Builds
+     *
+     * @param project the project to populate with jobs
+     * @return jobs all Jobs from the selected Project
+     */
     public ArrayList<JobData> getJobsFromProject(View project){
         ArrayList<JobData> jobs = new ArrayList<JobData>();
         ArrayList<String> jobNames = new ArrayList<String>();
@@ -373,8 +434,14 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return null;
     }
 
+    /**
+     * Gets the Job with jobName from this Jenkins instance
+     * and parses it to a custom JobData class
+     *
+     * @param jobName name of the job to search for
+     * @return the Job as a JobData class
+     */
     public JobData getJobByName(String jobName){
-
             try {
                 List<Job> jenkinsJobs = Jenkins.getInstance().getAllItems(Job.class);
                 for (Job j : jenkinsJobs) {
@@ -437,8 +504,15 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return null;
     }
 
-    //Gets all child values defined in the Metadata Plugin, and creates tags according their values
-    public ArrayList<Tag> getBuildTags(int buildNr, String jobName){
+    /**
+     * Gets all child values defined in the Metadata Plugin
+     * and creates Tags according their values
+     *
+     * @param jobName name of the Job to search for
+     * @param buildNr number of the Build of the Job
+     * @return tags the list of Tags associated to this Build
+     */
+    public ArrayList<Tag> getBuildTags(String jobName, int buildNr){
         ArrayList<Tag> tags = new ArrayList<Tag>();
         MetadataBuildAction metadataBuild = Jenkins.getInstance().getItemByFullName(jobName, Job.class).getBuildByNumber(buildNr).getAction(MetadataBuildAction.class);
 
@@ -461,14 +535,20 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return tags;
     }
 
-    //Gets last 'buildHistorySize' builds from the Jobs in Projects displayed on this Dashboard
+    /**
+     * Gets last 'buildHistorySize' builds from
+     * the Jobs associated to the Projects displayed
+     * on this Dashboard
+     *
+     * @return buildList list of last 'buildHistorySize' Builds ran
+     */
     @Exported(name="buildHistory")
     public ArrayList<Build> getBuildHistory(){
         try {
             List<Job> jobs = Jenkins.getInstance().getAllItems(Job.class);
             RunList builds = new RunList(jobs);
             int buildHistorySize = 0;
-            ArrayList<Build> l = new ArrayList<Build>();
+            ArrayList<Build> buildList = new ArrayList<Build>();
             Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
             for (Object b : builds) {
@@ -487,10 +567,9 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                             continue;
 
                         Result result = build.getResult();
-                        //HttpRequest to Metadata Plugin (doGet)
-                        ArrayList<Tag> tags = new ArrayList<Tag>(getBuildTags(build.getNumber(), job.getName()));
+                        ArrayList<Tag> tags = new ArrayList<Tag>(getBuildTags(job.getName(), build.getNumber()));
 
-                        l.add(new Build(job.getName(),
+                        buildList.add(new Build(job.getName(),
                                 build.getFullDisplayName(),
                                 build.getNumber(),
                                 build.getStartTimeInMillis(),
@@ -503,13 +582,20 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 }else
                     break;
             }
-            return l;
+            return buildList;
         }catch (Error e){
             e.printStackTrace();
         }
         return null;
     }
 
+    /**
+     * Gets the Builds from the Job
+     * and parses them to a custom Build class
+     *
+     * @param job job to get Builds from
+     * @return builds list of Builds from the selected Job
+     */
     public ArrayList<Build> getBuildsFromJob(Job job){
         ArrayList<Build> builds = new ArrayList<Build>();
         int size = 0;
@@ -518,7 +604,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             if(size < getProjectBuildTableSize()) {
                 Run build = (Run) b;
                 Result result = build.getResult();
-                ArrayList<Tag> tags = getBuildTags(build.getNumber(), job.getName());
+                ArrayList<Tag> tags = getBuildTags(job.getName(), build.getNumber());
                 String buildUrl = build.getUrl();
 
                 builds.add(new Build(job.getName(),
@@ -536,6 +622,12 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         return builds;
     }
 
+    /**
+     * Gets all the Jobs associated to the Views
+     * displayed in the Dashboard
+     *
+     * @return allJobs list of Jobs displayed
+     */
     @Exported(name="allJobs")
     public Collection<JobData> getAllJobs() {
         ArrayList<JobData> allJobs = new ArrayList<JobData>();
