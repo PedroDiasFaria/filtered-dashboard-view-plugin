@@ -279,15 +279,18 @@ function open_project(divSelector, viewUrl, project){
 
             //Hides columns that don't have selected filters
             table.columns().every( function () {
-                if(this.index() > 0 ){
-                    this.visible(true);
+                var column = this;
+                if(column.index() > 0 ){
+                    //Resets visibility
+                    column.visible(true);
                     if(filter.length > 0){
-                        var found = false;
-                        filter.forEach( finding => {
-                            if(table.columns().data()[this.index()].join().includes(finding))
-                                found = true;
+                        //If the filter isn't found...
+                        var found =
+                        filter.some(function(elem){
+                            return table.columns().data()[column.index()].join().includes(elem);
                         })
-                        this.visible(found);
+                        //...hides the column
+                        column.visible(found);
                     }
                 }
             } );

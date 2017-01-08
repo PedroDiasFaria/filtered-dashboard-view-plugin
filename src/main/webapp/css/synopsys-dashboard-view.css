@@ -123,13 +123,17 @@ th, td {
 .job-name-header{
     max-width: 50px;
     word-wrap: break-word;
+    border-top: 1px solid #dddddd !important;
+    border-left: 3px solid #dddddd;
+    border-right: 2px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
 }
 
 .project-table td{
   width: 40px;
   border-top: 1px solid #dddddd;
-  border-left: 1px solid #dddddd;
-  border-right: 1px solid #dddddd;
+  border-left: 3px solid #dddddd;
+  border-right: 2px solid #dddddd;
   border-bottom: 1px solid #dddddd;
   vertical-align: middle;
   text-align: center;

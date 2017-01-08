@@ -512,31 +512,49 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      */
     public ArrayList<Tag> getBuildTags(String jobName, int buildNr){
         ArrayList<Tag> tags = new ArrayList<Tag>();
-
-        try {
-            //Get all the metadata in this build
-            MetadataBuildAction metadataBuild = Jenkins.getInstance().getItemByFullName(jobName, Job.class)
-                                                .getBuildByNumber(buildNr).getAction(MetadataBuildAction.class);
-
-            if (metadataBuild != null) {
-                Collection<String> metadataNames = metadataBuild.getChildNames();
-                for (String name : metadataNames) {
-                    switch (name) {
-                        //Hide metadata-plugin predefined tags
-                        case "job-info":
-                            break;
-                        case "build":
-                            break;
-                        default:
-                            MetadataValue value = metadataBuild.getChild(name);
-                            tags.add(new Tag(name.toUpperCase(), value.getValue().toString().toLowerCase()));
-                            break;
+        Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
+        Run build = job.getBuildByNumber(buildNr);
+        if(job.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")){
+            ParametersAction parameterActions = build.getAction(ParametersAction.class);
+            if(parameterActions != null ) {
+                for (ParameterValue parameter : parameterActions.getAllParameters()) {
+                    if(parameter.getClass().equals(StringParameterValue.class)) {
+                        String name = parameter.getName().replace("metadata:", "");
+                        tags.add(new Tag(name.toUpperCase(), parameter.getValue().toString().toLowerCase()));
                     }
                 }
             }
-            return tags;
-        }catch (Exception e){
-            e.printStackTrace();
+        }else {
+            try {
+                //Get all the metadata in this build
+                //MetadataBuildAction metadataBuild = new MetadataBuildAction();
+                //Run build = Jenkins.getInstance().getItemByFullName(jobName, Job.class).getBuildByNumber(buildNr);
+                MetadataBuildAction metadataBuild = new MetadataBuildAction();
+
+                //By unknonw reason, Inheritance-Plugin makes conflict with the Metadata-Plugin
+                if (!build.getParent().getClass().getName().equals("hudson.plugins.project_inheritance.projects.InheritanceProject"))
+                    metadataBuild = build.getAction(MetadataBuildAction.class);
+
+                if (metadataBuild != null) {
+                    Collection<String> metadataNames = metadataBuild.getChildNames();
+                    for (String name : metadataNames) {
+                        switch (name) {
+                            //Hide metadata-plugin predefined tags
+                            case "job-info":
+                                break;
+                            case "build":
+                                break;
+                            default:
+                                MetadataValue value = metadataBuild.getChild(name);
+                                tags.add(new Tag(name.toUpperCase(), value.getValue().toString().toLowerCase()));
+                                break;
+                        }
+                    }
+                }
+                return tags;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return tags;
     }

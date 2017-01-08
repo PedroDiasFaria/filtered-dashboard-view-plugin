@@ -11,26 +11,21 @@
 
             <title>Jenkins - ${%Title}</title>
 
+            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script>
+
             <!-- Extra bootstrap functions -->
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"></link>
             <!-- Bootstrap -->
             <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
             <!-- Snps Dashboard -->
             <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/synopsys-dashboard-view.css" type="text/css" rel="stylesheet" />
 
             <!-- DataTables -->
-
-            <!--
-            -->
-            <link href="https://cdn.datatables.net/1.10.13/css/dataTables.bootstrap.min.css" type="text/css" rel="stylesheet" />
-            <link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" type="text/css" rel="stylesheet" />
-
-            <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-            <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
-            <script src="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap4.min.js"></script>
-            <script src="https://bartaz.github.io/sandbox.js/jquery.highlight.js"></script>
-            <script src="https://cdn.datatables.net/plug-ins/1.10.13/features/searchHighlight/dataTables.searchHighlight.min.js"></script>
+            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/dataTables.bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/responsive.bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.dataTables.min.js"></script>
+            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/dataTables.bootstrap4.min.js"></script>
+            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.highlight.js"></script>
+            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/dataTables.searchHighlight.min.js"></script>
 
             <style>
                 body, th, td, button.btn { font-size: ${it.fontSize}px; }
@@ -42,7 +37,7 @@
                     <span class="glyphicon glyphicon-cog"></span>
                 </div>
             </a>
-            <a href="${rootURL}" alt="Home">
+            <a href="${rootURL}/">
                 <div class="abs-top-right-home">
                     <span class="glyphicon glyphicon-home"></span>
                 </div>
@@ -74,16 +69,6 @@
                 </div>
                 <!-- Right half -->
                 <div class="col-lg-6 right-border height100perc">
-
-                    <!-- just to test the projects view -->
-
-                    <!-- testing without nodes for now
-                    <div class="col-lg-12" style="height:${it.bottomHalfHeight}%;">
-                        <h4>${%Nodes}</h4>
-                        <!- JENKINS_URL/computer/api/json->
-                        <div id="jenkinsNodeStatuses" class="col-lg-12"></div>
-                    </div> -->
-
                     <div class="col-lg-12 bottom-border" style="height:${it.topHalfHeight}%;" id="jenkinsProjectsDiv">
                         <h4>${%Projects}</h4>
                         <!-- JENKINS_URL/computer/api/json-->
@@ -99,7 +84,6 @@
             </div>
             <div class="container-fluid height100perc" id="project-container" style="display: none;">
             </div>
-            <!--<script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script> -->
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>
             <script src="${rootURL}/plugin/synopsys-dashboard-view/js/synopsys-dashboard-view.js"></script>
 
@@ -121,9 +105,6 @@
                     reload_jenkins_build_history('#jenkinsBuildHistory', jenkinsUrl + '/${it.url}', buildHistorySize);
                     reload_jenkins_jobs('#jenkinsJobStatuses', jenkinsUrl + '/${it.url}', buttonClass);
                     reload_jenkins_build_queue('#jenkinsBuildQueue', jenkinsUrl, buildQueueSize);
-
-
-                    <!--reload_jenkins_node_statuses('#jenkinsNodeStatuses', jenkinsUrl, nodeStatuses, buttonClass);-->
 
                     <!-- Views container instead of jobs -->
                     reload_jenkins_projects('#jenkinsViewsStatuses', jenkinsUrl + '/${it.url}', buttonClass);
