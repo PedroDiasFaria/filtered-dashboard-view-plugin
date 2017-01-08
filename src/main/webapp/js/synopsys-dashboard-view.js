@@ -377,10 +377,12 @@ var createTable = function(projectJobs, tableSize){
                             if(cell.url == "null"){
                                 newCell+= '<a href="javascript:;"><div>' + cell.result+ '</div>';
                             }else{
-                                newCell+= '<a href="'+ cell.url +'" target="_blank" style="text-decoration:none"><div>' + cell.result+
-                                            '<br>#' + cell.buildNr + '</div>';
+                                newCell+= '<a href="'+ cell.url +'" target="_blank" style="text-decoration:none">' +
+                                            '<div>' +
+                                            cell.result + '<br>#' +
+                                            cell.buildNr +
+                                            '</div>';
                             }
-                            //newCell+= '<span class="callTags" style="display:none">';
                             //only show if there are tags
                             if(cell.tags.length > 0 ){
                                 newCell+= '<span class="callTags"><b>Tags: </b>';

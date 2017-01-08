@@ -37,6 +37,7 @@ import hudson.util.RunList;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
 import net.sf.json.*;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -514,21 +515,33 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
         ArrayList<Tag> tags = new ArrayList<Tag>();
         Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
         Run build = job.getBuildByNumber(buildNr);
+
+        /**
+         * Since the Metadata-Plugin doesn't support WorkflowJob (From the Pipeline-Plugin)
+         * one can add metadata to this type of jobs by creating Parameterized Builds
+         * (checking 'This project is parameterized')
+         * and creating its tags by adding parameters in the following sctructure:
+         *
+         * String Parameter
+         * Name:   metadata:NameOfTag
+         * Value:  anyValue
+         */
         if(job.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")){
             ParametersAction parameterActions = build.getAction(ParametersAction.class);
             if(parameterActions != null ) {
                 for (ParameterValue parameter : parameterActions.getAllParameters()) {
                     if(parameter.getClass().equals(StringParameterValue.class)) {
-                        String name = parameter.getName().replace("metadata:", "");
-                        tags.add(new Tag(name.toUpperCase(), parameter.getValue().toString().toLowerCase()));
+                        if(StringUtils.substring(parameter.getName(), 0, "metadata:".length()).equals("metadata:") &&
+                            !parameter.getValue().equals("")) {
+                            String name = parameter.getName().replace("metadata:", "");
+                            tags.add(new Tag(name.toUpperCase(), parameter.getValue().toString().toLowerCase()));
+                        }
                     }
                 }
             }
         }else {
             try {
                 //Get all the metadata in this build
-                //MetadataBuildAction metadataBuild = new MetadataBuildAction();
-                //Run build = Jenkins.getInstance().getItemByFullName(jobName, Job.class).getBuildByNumber(buildNr);
                 MetadataBuildAction metadataBuild = new MetadataBuildAction();
 
                 //By unknonw reason, Inheritance-Plugin makes conflict with the Metadata-Plugin
