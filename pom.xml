@@ -28,8 +28,8 @@
     -->
   </properties>
 
-  <name>Synopsys Dashboard View Plugin</name>
-  <description>Synopsys Dashboard View for Hardware Project Development. @Synopsys Porto - Colaboration with FEUP</description>
+  <name>Filtered Dashboard Plugin</name>
+  <description>Filtered Dashboard - Colaboration with FEUP & Synopsys Porto, Portugal</description>
   <url>http://www.synopsys.com/home.aspx</url>
 
   <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
@@ -44,7 +44,7 @@
   <!-- If you want this to appear on the wiki page: -->
   <developers>
     <developer>
-      <id>PedroFaria</id>
+      <id>pedrofaria</id>
       <name>Pedro Faria</name>
       <email>pedrodiasfaria@gmail.com</email>
     </developer>
@@ -59,9 +59,9 @@
   -->
 
   <scm>
-    <connection>scm:git:git://github.com/PedroDiasFaria/snps-thesis.git</connection>
-    <developerConnection>scm:git:git@github.com:PedroDiasFaria/snps-thesis.git</developerConnection>
-    <url>https://github.com/PedroDiasFaria/snps-thesis</url>
+    <connection>scm:git:git://github.com/PedroDiasFaria/filtered-dashboard-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:PedroDiasFaria/filtered-dashboard-plugin.git</developerConnection>
+    <url>https://github.com/PedroDiasFaria/filtered-dashboard-plugin</url>
   </scm>
 
   <repositories>
