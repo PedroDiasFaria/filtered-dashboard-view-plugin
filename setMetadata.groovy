@@ -1,7 +1,7 @@
 /**
  * This is a Groovy Script function you can add
  * to your Pipeline Jobs to include Metadata in them
- * Only workis with StringParameters
+ * Only works with StringParameters
  *
  * Used until Metadata Plugin supports WorkflowJobs
  */

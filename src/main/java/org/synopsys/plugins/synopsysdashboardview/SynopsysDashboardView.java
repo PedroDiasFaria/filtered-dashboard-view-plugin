@@ -87,7 +87,6 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     //Allways hold at least one view
     /** All the Views on this Jenkins instance */
     private CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
-    //private transient ViewGroupMixIn viewGroupMixIn;
     private String defaultViewName;
 
     /** All Builds in this View */
