@@ -22,26 +22,47 @@
  *  THE SOFTWARE.
  */
 
-package org.synopsys.plugins.synopsysdashboardview;
+package feup.pfaria.jenkins.plugins.filtereddashboardview;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.util.ArrayList;
+
 /**
- * Custom Tag class to hold Metadata information of Builds
- * Is associated to a Build
+ * Custom Build class used in the Dashboard
+ * Has Tags associated to it
+ * Is associated to one JobData
  *
  * @author Pedro Faria  &lt;pedrodiasfaria@gmail.com&gt;
  */
 @ExportedBean(defaultVisibility = 999)
-public class Tag{
+public class Build {
     @Exported
-    public String label;
+    public String jobName;
     @Exported
-    public String value;
+    public String buildName;
+    @Exported
+    public int number;
+    @Exported
+    public long startTime;
+    @Exported
+    public long duration;
+    @Exported
+    public String result;
+    @Exported
+    public String buildUrl;
+    @Exported
+    public ArrayList<Tag> Tags = new ArrayList<Tag>();
 
-    Tag(String label, String value){
-        this.label = label;
-        this.value = value;
+    public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result, ArrayList<Tag> tags) {
+        this.jobName = jobName;
+        this.buildName = buildName;
+        this.number = number;
+        this.startTime = startTime;
+        this.duration = duration;
+        this.buildUrl = "../../" + buildUrl;
+        this.result = result;
+        this.Tags = new ArrayList<Tag>(tags);
     }
 }

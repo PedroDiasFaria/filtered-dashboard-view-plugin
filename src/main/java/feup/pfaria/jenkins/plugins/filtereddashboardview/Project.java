@@ -22,7 +22,7 @@
  *  THE SOFTWARE.
  */
 
-package org.synopsys.plugins.synopsysdashboardview;
+package feup.pfaria.jenkins.plugins.filtereddashboardview;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;

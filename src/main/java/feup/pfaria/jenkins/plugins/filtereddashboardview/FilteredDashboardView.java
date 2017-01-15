@@ -27,8 +27,10 @@
  *  source: https://wiki.jenkins-ci.org/display/JENKINS/Mission+Control+Plugin
  */
 
-package org.synopsys.plugins.synopsysdashboardview;
+package feup.pfaria.jenkins.plugins.filtereddashboardview;
 
+import com.sonyericsson.hudson.plugins.metadata.model.MetadataBuildAction;
+import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
@@ -36,28 +38,19 @@ import hudson.security.Permission;
 import hudson.util.RunList;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
-import net.sf.json.*;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-
 import java.util.*;
-
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import org.kohsuke.stapler.*;
-
-import com.sonyericsson.hudson.plugins.metadata.model.*;
-import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
 
 @SuppressWarnings({"unused", "all"})
 
@@ -71,7 +64,7 @@ import com.sonyericsson.hudson.plugins.metadata.model.values.MetadataValue;
  *
  * @author Pedro Faria  &lt;pedrodiasfaria@gmail.com&gt;
  */
-public class SynopsysDashboardView extends View implements ViewGroup, StaplerProxy{
+public class FilteredDashboardView extends View implements ViewGroup, StaplerProxy{
 
     //From missioncontrol
     private transient int getBuildsLimit;
@@ -90,7 +83,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     private String defaultViewName;
 
     /** All Builds in this View */
-    private ArrayList<Build> allBuilds = new ArrayList<Build>();
+    private ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> allBuilds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
     private int projectBuildTableSize;
 
     /** All selected Views to display */
@@ -105,7 +98,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      * @param name this view name
      */
     @DataBoundConstructor
-    public SynopsysDashboardView(String name) {
+    public FilteredDashboardView(String name) {
         super(name);
 
         //From missioncontrol
@@ -336,13 +329,14 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
     }
 
     /**
+     *
      * This descriptor class is required to configure the View Page
      */
     @Extension
     public static final class DescriptorImpl extends ViewDescriptor {
         @Override
         public String getDisplayName() {
-            return Messages.SynopsysDasbhoardView_DisplayName();
+            return Messages.FilteredDashboardView_DisplayName();
         }
     }
 
@@ -373,7 +367,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
             if (getDefaultView() != null)
                 rsp.sendRedirect2("view/" + defaultViewName);
             else
-                req.getView(SynopsysDashboardView.this, "index.jelly").forward(req, rsp);
+                req.getView(FilteredDashboardView.this, "index.jelly").forward(req, rsp);
         }
     }
 
@@ -392,14 +386,14 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      * @return allProjects
      */
     @Exported(name="allProjects")
-    public Collection<Project> getAllProjects(){
+    public Collection<feup.pfaria.jenkins.plugins.filtereddashboardview.Project> getAllProjects(){
         List<View> projects = new ArrayList<View>(getViews());
-        ArrayList<Project> allProjects = new ArrayList<Project>();
+        ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Project> allProjects = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Project>();
 
         for(View p : projects){
             if(this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())){   //Views of this class aren't shown inside it
                 if(this.selectedViews.get(p.getViewName())){
-                    Project newProject = new Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
+                    feup.pfaria.jenkins.plugins.filtereddashboardview.Project newProject = new feup.pfaria.jenkins.plugins.filtereddashboardview.Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
                     allProjects.add(newProject);
                 }
             }
@@ -445,7 +439,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      */
     public JobData parseJob(Job job){
             try {
-                ArrayList<Build> builds = new ArrayList<Build>();
+                ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> builds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
                 String status;
                 String name;
                 String url = "";
@@ -579,7 +573,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      * @return buildList list of last 'buildHistorySize' Builds ran
      */
     @Exported(name="buildHistory")
-    public ArrayList<Build> getBuildHistory(){
+    public ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> getBuildHistory(){
         try {
             Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
             ArrayList<Job> jobs = new ArrayList<>();
@@ -600,7 +594,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
 
             RunList builds = new RunList(jobs).limit(200);  //We can ignore if the builds of this project are beyond the 200th
             int buildHistorySize = 0;
-            ArrayList<Build> buildList = new ArrayList<Build>();
+            ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> buildList = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
 
             for (Object b : builds) {
                 if(buildHistorySize < getBuildHistorySize()) {
@@ -609,7 +603,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                     Result result = build.getResult();
                     ArrayList<Tag> tags = new ArrayList<Tag>(getBuildTags(build.getParent().getName(), build.getNumber()));
 
-                    buildList.add(new Build(build.getParent().getName(),
+                    buildList.add(new feup.pfaria.jenkins.plugins.filtereddashboardview.Build(build.getParent().getName(),
                             build.getFullDisplayName(),
                             build.getNumber(),
                             build.getStartTimeInMillis(),
@@ -635,8 +629,8 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
      * @param job job to get Builds from
      * @return builds list of Builds from the selected Job
      */
-    public ArrayList<Build> getBuildsFromJob(Job job){
-        ArrayList<Build> builds = new ArrayList<Build>();
+    public ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> getBuildsFromJob(Job job){
+        ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> builds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
         int size = 0;
 
         for(Object b : job.getBuilds()){
@@ -646,7 +640,7 @@ public class SynopsysDashboardView extends View implements ViewGroup, StaplerPro
                 ArrayList<Tag> tags = getBuildTags(job.getName(), build.getNumber());
                 String buildUrl = build.getUrl();
 
-                builds.add(new Build(job.getName(),
+                builds.add(new feup.pfaria.jenkins.plugins.filtereddashboardview.Build(job.getName(),
                             build.getFullDisplayName(),
                             build.getNumber(),
                             build.getStartTimeInMillis(),

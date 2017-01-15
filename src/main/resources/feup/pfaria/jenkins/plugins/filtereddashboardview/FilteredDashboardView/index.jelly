@@ -1,6 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:x="jelly:xml">
     <st:contentType value="text/html;charset=UTF-8" />
     <j:new var="h" className="hudson.Functions"/>
+    <j:set var="jsPath" value="plugin/filtered-dashboard-view/js"/>
+    <j:set var="cssPath" value="plugin/filtered-dashboard-view/css"/>
     ${h.initPageVariables(context)}
     <x:doctype name="html" />
     <html lang="en">
@@ -11,21 +13,21 @@
 
             <title>Jenkins - ${%Title}</title>
 
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.min.js"></script>
+            <script src="${rootURL}/${jsPath}/jquery.min.js"></script>
 
             <!-- Extra bootstrap functions -->
             <!-- Bootstrap -->
-            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <link href="${app.rootUrl}${cssPath}/bootstrap.min.css" type="text/css" rel="stylesheet" />
             <!-- Snps Dashboard -->
-            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/synopsys-dashboard-view.css" type="text/css" rel="stylesheet" />
+            <link href="${app.rootUrl}${cssPath}/filtered-dashboard-view.css" type="text/css" rel="stylesheet" />
 
             <!-- DataTables -->
-            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/dataTables.bootstrap.min.css" type="text/css" rel="stylesheet" />
-            <link href="${app.rootUrl}plugin/synopsys-dashboard-view/css/responsive.bootstrap.min.css" type="text/css" rel="stylesheet" />
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.dataTables.min.js"></script>
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/dataTables.bootstrap4.min.js"></script>
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/jquery.highlight.js"></script>
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/dataTables.searchHighlight.min.js"></script>
+            <link href="${app.rootUrl}${cssPath}/dataTables.bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <link href="${app.rootUrl}${cssPath}/responsive.bootstrap.min.css" type="text/css" rel="stylesheet" />
+            <script src="${rootURL}/${jsPath}/jquery.dataTables.min.js"></script>
+            <script src="${rootURL}/${jsPath}/dataTables.bootstrap4.min.js"></script>
+            <script src="${rootURL}/${jsPath}/jquery.highlight.js"></script>
+            <script src="${rootURL}/${jsPath}/dataTables.searchHighlight.min.js"></script>
 
             <style>
                 body, th, td, button.btn { font-size: ${it.fontSize}px; }
@@ -84,8 +86,8 @@
             </div>
             <div class="container-fluid height100perc" id="project-container" style="display: none;">
             </div>
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/bootstrap.min.js"></script>
-            <script src="${rootURL}/plugin/synopsys-dashboard-view/js/synopsys-dashboard-view.js"></script>
+            <script src="${rootURL}/${jsPath}/bootstrap.min.js"></script>
+            <script src="${rootURL}/${jsPath}/filtered-dashboard-view.js"></script>
 
             <script type="text/javascript">
                 var jenkinsUrl = '${rootURL}';
