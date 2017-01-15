@@ -64,7 +64,7 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Pedro Faria  &lt;pedrodiasfaria@gmail.com&gt;
  */
-public class FilteredDashboardView extends View implements ViewGroup, StaplerProxy{
+public class FilteredDashboardView extends View implements ViewGroup, StaplerProxy {
 
     //From missioncontrol
     private transient int getBuildsLimit;
@@ -78,23 +78,34 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
     private String filterRegex;
 
     //Allways hold at least one view
-    /** All the Views on this Jenkins instance */
+    /**
+     * All the Views on this Jenkins instance
+     */
     private CopyOnWriteArrayList<View> views = new CopyOnWriteArrayList<View>();
     private String defaultViewName;
 
-    /** All Builds in this View */
-    private ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> allBuilds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
+    /**
+     * All Builds in this View
+     */
+    private ArrayList<Build> allBuilds = new ArrayList<Build>();
     private int projectBuildTableSize;
 
-    /** All selected Views to display */
+    /**
+     * All selected Views to display
+     */
     private HashMap<String, Boolean> selectedViews;
-    /** Map of Views associated with their Jobs */
+    /**
+     * Map of Views associated with their Jobs
+     */
     private Map<String, ArrayList<String>> jobsInProjectMap;
-    /** Map of Jobs associated with their custom class JobData */
+    /**
+     * Map of Jobs associated with their custom class JobData
+     */
     private Map<String, JobData> jobsMap;
 
     /**
      * Dashboard constructor
+     *
      * @param name this view name
      */
     @DataBoundConstructor
@@ -137,7 +148,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
         this.buildQueueSize = json.getInt("buildQueueSize");
         this.useCondensedTables = json.getBoolean("useCondensedTables");
         this.projectBuildTableSize = json.getInt("projectBuildTableSize");
-        if (json.get("useRegexFilter") != null ) {
+        if (json.get("useRegexFilter") != null) {
             String regexToTest = req.getParameter("filterRegex");
             try {
                 Pattern.compile(regexToTest);
@@ -161,13 +172,12 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
     }
 
     /**
-     *
      * @param selectedViewsJSON JSON Map with the Views to be displayed in the Dashboard
      */
-    public void selectViews(JSONObject selectedViewsJSON){
+    public void selectViews(JSONObject selectedViewsJSON) {
         Iterator<?> keys = selectedViewsJSON.keys();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
             String value = selectedViewsJSON.get(key).toString();
             this.selectedViews.put(key, Boolean.valueOf(value));
         }
@@ -186,6 +196,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
     /**
      * Forces some default values
      * Refreshes Jobs and Builds that suffered changes
+     *
      * @return this View
      */
     protected Object readResolve() {
@@ -211,7 +222,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
         if (projectBuildTableSize == 0)
             projectBuildTableSize = 5;
 
-        if(selectedViews == null){
+        if (selectedViews == null) {
             this.selectedViews = new HashMap<String, Boolean>();
         }
 
@@ -220,7 +231,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
         this.jobsMap = new TreeMap<String, JobData>();
 
         //if (views == null) {
-            views = new CopyOnWriteArrayList<View>();
+        views = new CopyOnWriteArrayList<View>();
         //}
 
         if (views.isEmpty()) {
@@ -275,69 +286,57 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
         return layoutHeightRatio.substring(2, 4);
     }
 
-    public HashMap<String, Boolean> getSelectedViews(){
-       return selectedViews;
+    public HashMap<String, Boolean> getSelectedViews() {
+        return selectedViews;
     }
 
     @Override
-    public ItemGroup<? extends TopLevelItem> getItemGroup(){
+    public ItemGroup<? extends TopLevelItem> getItemGroup() {
         return getOwnerItemGroup();
     }
 
     @Override
-    public View getPrimaryView(){
-            View v = getView(defaultViewName);
-            if(v==null) // fallback
-                v = views.get(0);
+    public View getPrimaryView() {
+        View v = getView(defaultViewName);
+        if (v == null) // fallback
+            v = views.get(0);
 
-            return v;
+        return v;
     }
 
-    public boolean canDelete(View view){
+    public boolean canDelete(View view) {
         return false;
     }
 
     @Override
-    public List<Action> getViewActions(){
+    public List<Action> getViewActions() {
         return getOwner().getViewActions();
     }
 
-    public ViewsTabBar getViewsTabBar(){
+    public ViewsTabBar getViewsTabBar() {
         return Hudson.getInstance().getViewsTabBar();
     }
 
     @Override
-    public View getView(String name){
-        for(View v : views)
-            if(v.getViewName().equals(name))
+    public View getView(String name) {
+        for (View v : views)
+            if (v.getViewName().equals(name))
                 return v;
         return null;
     }
 
     @Override
-    public void deleteView(View view) throws IOException{
+    public void deleteView(View view) throws IOException {
         views.remove(view);
         save();
     }
 
-    public void onViewRenamed(View view, String oldName, String newName){
+    public void onViewRenamed(View view, String oldName, String newName) {
     }
 
     @Override
     public boolean hasPermission(final Permission p) {
         return true;
-    }
-
-    /**
-     *
-     * This descriptor class is required to configure the View Page
-     */
-    @Extension
-    public static final class DescriptorImpl extends ViewDescriptor {
-        @Override
-        public String getDisplayName() {
-            return Messages.FilteredDashboardView_DisplayName();
-        }
     }
 
     public Api getApi() {
@@ -346,8 +345,9 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
         return new Api(this);
     }
 
-    /********/
-    /** StapplerProxy **/
+    /**
+     * StapplerProxy
+     **/
     public Object getTarget() {
         // Proxy to handle redirect when a default subview is configured
         return (getDefaultView() != null &&
@@ -355,29 +355,17 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
                 ? new DefaultViewProxy() : this;
     }
 
+    /********/
+
     public View getDefaultView() {
         // Don't allow default subview for a NestedView that is the Jenkins default view..
         // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
         return this.isDefault() ? null : getView(defaultViewName);
     }
 
-    public class DefaultViewProxy {
-        public void doIndex(StaplerRequest req, StaplerResponse rsp)
-                throws IOException, ServletException {
-            if (getDefaultView() != null)
-                rsp.sendRedirect2("view/" + defaultViewName);
-            else
-                req.getView(FilteredDashboardView.this, "index.jelly").forward(req, rsp);
-        }
-    }
-
-    public synchronized Collection<View> getViews(){
+    public synchronized Collection<View> getViews() {
         return Jenkins.getInstance().getViews();
     }
-
-    /******************/
-    /**DashboardLogic**/
-    /******************/
 
     /**
      * Treat each View as a separate Project
@@ -385,15 +373,15 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      *
      * @return allProjects
      */
-    @Exported(name="allProjects")
-    public Collection<feup.pfaria.jenkins.plugins.filtereddashboardview.Project> getAllProjects(){
+    @Exported(name = "allProjects")
+    public Collection<Project> getAllProjects() {
         List<View> projects = new ArrayList<View>(getViews());
-        ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Project> allProjects = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Project>();
+        ArrayList<Project> allProjects = new ArrayList<Project>();
 
-        for(View p : projects){
-            if(this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())){   //Views of this class aren't shown inside it
-                if(this.selectedViews.get(p.getViewName())){
-                    feup.pfaria.jenkins.plugins.filtereddashboardview.Project newProject = new feup.pfaria.jenkins.plugins.filtereddashboardview.Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
+        for (View p : projects) {
+            if (this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())) {   //Views of this class aren't shown inside it
+                if (this.selectedViews.get(p.getViewName())) {
+                    Project newProject = new Project(p.getViewName(), p.getUrl(), getJobsFromProject(p));
                     allProjects.add(newProject);
                 }
             }
@@ -408,7 +396,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      * @param project the project to populate with jobs
      * @return jobs all Jobs from the selected Project
      */
-    public ArrayList<JobData> getJobsFromProject(View project){
+    public ArrayList<JobData> getJobsFromProject(View project) {
         ArrayList<JobData> jobs = new ArrayList<JobData>();
         ArrayList<String> jobNames = new ArrayList<String>();
 
@@ -417,18 +405,22 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
             for (Object j : project.getAllItems()) {
                 Job newJob = (Job) j;
                 JobData newJobData = parseJob(newJob);
-                if(newJobData != null) {
+                if (newJobData != null) {
                     jobNames.add(newJob.getName());
                     jobs.add(newJobData);
                 }
             }
             this.jobsInProjectMap.put(project.getViewName(), jobNames);
             return jobs;
-        }catch (Error e){
+        } catch (Error e) {
             e.printStackTrace();
         }
         return null;
     }
+
+    /******************/
+    /**DashboardLogic**/
+    /******************/
 
     /**
      * Parses the Job job from this Jenkins instance
@@ -437,62 +429,62 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      * @param job Job to parse
      * @return the Job as a JobData class
      */
-    public JobData parseJob(Job job){
-            try {
-                ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> builds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
-                String status;
-                String name;
-                String url = "";
-                String buildUrl = "";
-                int lastBuildNr = 0;
-                Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
+    public JobData parseJob(Job job) {
+        try {
+            ArrayList<Build> builds = new ArrayList<Build>();
+            String status;
+            String name;
+            String url = "";
+            String buildUrl = "";
+            int lastBuildNr = 0;
+            Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
 
 
-                // Skip matrix configuration sub-jobs and Maven modules
-                if (job.getClass().getName().equals("hudson.matrix.MatrixConfiguration")
-                        || job.getClass().getName().equals("hudson.maven.MavenModule"))
-                    return null;
+            // Skip matrix configuration sub-jobs and Maven modules
+            if (job.getClass().getName().equals("hudson.matrix.MatrixConfiguration")
+                    || job.getClass().getName().equals("hudson.maven.MavenModule"))
+                return null;
 
-                // If filtering is enabled, skip jobs not matching the filter
-                if (r != null && !r.matcher(job.getName()).find())
-                    return null;
+            // If filtering is enabled, skip jobs not matching the filter
+            if (r != null && !r.matcher(job.getName()).find())
+                return null;
 
-                // Get the url to link it in the dashboard
-                url = job.getUrl();
+            // Get the url to link it in the dashboard
+            url = job.getUrl();
 
-                if (job.isBuilding()) {
-                    status = "BUILDING";
-                    buildUrl = "BUILDING";
+            if (job.isBuilding()) {
+                status = "BUILDING";
+                buildUrl = "BUILDING";
+            } else {
+                Run lb = job.getLastBuild();
+                if (lb == null) {
+                    status = "NOTBUILT";
+                    lastBuildNr = 0;
+                    buildUrl = "NOTBUILT";
+
                 } else {
-                    Run lb = job.getLastBuild();
-                    if (lb == null) {
-                        status = "NOTBUILT";
-                        lastBuildNr = 0;
-                        buildUrl = "NOTBUILT";
-
-                    } else {
-                        status = lb.getResult().toString();
-                        lastBuildNr = job.getLastBuild().getNumber();
-                        buildUrl = lb.getUrl();
-                    }
+                    status = lb.getResult().toString();
+                    lastBuildNr = job.getLastBuild().getNumber();
+                    buildUrl = lb.getUrl();
                 }
-
-                ItemGroup parent = job.getParent();
-                if (parent != null && parent.getClass().getName().equals("com.cloudbees.hudson.plugins.folder.Folder")) {
-                    name = parent.getFullName() + " / " + job.getName();
-                } else {
-                    name = job.getName();
-                }
-
-                String dir = job.getBuildDir().toString();
-                builds = getBuildsFromJob(job);
-
-                JobData newJob = new JobData(name, status, url, dir, Integer.toString(lastBuildNr), buildUrl, builds);
-                this.jobsMap.put(job.getFullDisplayName(), newJob);
-                return newJob;
-            } catch (Error e) {
-                e.printStackTrace();
             }
+
+            ItemGroup parent = job.getParent();
+            if (parent != null && parent.getClass().getName().equals("com.cloudbees.hudson.plugins.folder.Folder")) {
+                name = parent.getFullName() + " / " + job.getName();
+            } else {
+                name = job.getName();
+            }
+
+            String dir = job.getBuildDir().toString();
+            builds = getBuildsFromJob(job);
+
+            JobData newJob = new JobData(name, status, url, dir, Integer.toString(lastBuildNr), buildUrl, builds);
+            this.jobsMap.put(job.getFullDisplayName(), newJob);
+            return newJob;
+        } catch (Error e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -504,7 +496,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      * @param buildNr number of the Build of the Job
      * @return tags the list of Tags associated to this Build
      */
-    public ArrayList<Tag> getBuildTags(String jobName, int buildNr){
+    public ArrayList<Tag> getBuildTags(String jobName, int buildNr) {
         ArrayList<Tag> tags = new ArrayList<Tag>();
         Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
         Run build = job.getBuildByNumber(buildNr);
@@ -519,20 +511,20 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
          * Name:   metadata:NameOfTag
          * Value:  anyValue
          */
-        if(job.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")){
+        if (job.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")) {
             ParametersAction parameterActions = build.getAction(ParametersAction.class);
-            if(parameterActions != null ) {
+            if (parameterActions != null) {
                 for (ParameterValue parameter : parameterActions.getAllParameters()) {
-                    if(parameter.getClass().equals(StringParameterValue.class)) {
-                        if(StringUtils.substring(parameter.getName(), 0, "metadata:".length()).equals("metadata:") &&
-                            !parameter.getValue().equals("")) {
+                    if (parameter.getClass().equals(StringParameterValue.class)) {
+                        if (StringUtils.substring(parameter.getName(), 0, "metadata:".length()).equals("metadata:") &&
+                                !parameter.getValue().equals("")) {
                             String name = parameter.getName().replace("metadata:", "");
                             tags.add(new Tag(name.toUpperCase(), parameter.getValue().toString().toLowerCase()));
                         }
                     }
                 }
             }
-        }else {
+        } else {
             try {
                 //Get all the metadata in this build
                 MetadataBuildAction metadataBuild = new MetadataBuildAction();
@@ -572,13 +564,13 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      *
      * @return buildList list of last 'buildHistorySize' Builds ran
      */
-    @Exported(name="buildHistory")
-    public ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> getBuildHistory(){
+    @Exported(name = "buildHistory")
+    public ArrayList<Build> getBuildHistory() {
         try {
             Pattern r = filterRegex != null ? Pattern.compile(filterRegex) : null;
             ArrayList<Job> jobs = new ArrayList<>();
 
-            for(String jobName : this.jobsMap.keySet()){
+            for (String jobName : this.jobsMap.keySet()) {
                 Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
 
                 // Skip Maven modules. They are part of parent Maven project
@@ -594,16 +586,16 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
 
             RunList builds = new RunList(jobs).limit(200);  //We can ignore if the builds of this project are beyond the 200th
             int buildHistorySize = 0;
-            ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> buildList = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
+            ArrayList<Build> buildList = new ArrayList<Build>();
 
             for (Object b : builds) {
-                if(buildHistorySize < getBuildHistorySize()) {
+                if (buildHistorySize < getBuildHistorySize()) {
                     Run build = (Run) b;
                     String buildUrl = build.getUrl();
                     Result result = build.getResult();
                     ArrayList<Tag> tags = new ArrayList<Tag>(getBuildTags(build.getParent().getName(), build.getNumber()));
 
-                    buildList.add(new feup.pfaria.jenkins.plugins.filtereddashboardview.Build(build.getParent().getName(),
+                    buildList.add(new Build(build.getParent().getName(),
                             build.getFullDisplayName(),
                             build.getNumber(),
                             build.getStartTimeInMillis(),
@@ -612,11 +604,11 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
                             result == null ? "BUILDING" : result.toString(),
                             tags));
                     buildHistorySize++;
-                }else
+                } else
                     break;
             }
             return buildList;
-        }catch (Error e){
+        } catch (Error e) {
             e.printStackTrace();
         }
         return null;
@@ -629,26 +621,26 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      * @param job job to get Builds from
      * @return builds list of Builds from the selected Job
      */
-    public ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> getBuildsFromJob(Job job){
-        ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build> builds = new ArrayList<feup.pfaria.jenkins.plugins.filtereddashboardview.Build>();
+    public ArrayList<Build> getBuildsFromJob(Job job) {
+        ArrayList<Build> builds = new ArrayList<Build>();
         int size = 0;
 
-        for(Object b : job.getBuilds()){
-            if(size < getProjectBuildTableSize()) {
+        for (Object b : job.getBuilds()) {
+            if (size < getProjectBuildTableSize()) {
                 Run build = (Run) b;
                 Result result = build.getResult();
                 ArrayList<Tag> tags = getBuildTags(job.getName(), build.getNumber());
                 String buildUrl = build.getUrl();
 
-                builds.add(new feup.pfaria.jenkins.plugins.filtereddashboardview.Build(job.getName(),
-                            build.getFullDisplayName(),
-                            build.getNumber(),
-                            build.getStartTimeInMillis(),
-                            build.getDuration(),
-                            buildUrl == null ? "null" : buildUrl,
-                            result == null ? "BUILDING" : result.toString(),
-                            tags));
-            }else
+                builds.add(new Build(job.getName(),
+                        build.getFullDisplayName(),
+                        build.getNumber(),
+                        build.getStartTimeInMillis(),
+                        build.getDuration(),
+                        buildUrl == null ? "null" : buildUrl,
+                        result == null ? "BUILDING" : result.toString(),
+                        tags));
+            } else
                 break;
             size++;
         }
@@ -661,12 +653,33 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
      *
      * @return allJobs list of Jobs displayed
      */
-    @Exported(name="allJobs")
+    @Exported(name = "allJobs")
     public Collection<JobData> getAllJobs() {
         ArrayList<JobData> allJobs = new ArrayList<JobData>();
-        for(Map.Entry<String, JobData> entry : this.jobsMap.entrySet()){
+        for (Map.Entry<String, JobData> entry : this.jobsMap.entrySet()) {
             allJobs.add(entry.getValue());
         }
         return allJobs;
+    }
+
+    /**
+     * This descriptor class is required to configure the View Page
+     */
+    @Extension
+    public static final class DescriptorImpl extends ViewDescriptor {
+        @Override
+        public String getDisplayName() {
+            return Messages.FilteredDashboardView_DisplayName();
+        }
+    }
+
+    public class DefaultViewProxy {
+        public void doIndex(StaplerRequest req, StaplerResponse rsp)
+                throws IOException, ServletException {
+            if (getDefaultView() != null)
+                rsp.sendRedirect2("view/" + defaultViewName);
+            else
+                req.getView(FilteredDashboardView.this, "index.jelly").forward(req, rsp);
+        }
     }
 }
