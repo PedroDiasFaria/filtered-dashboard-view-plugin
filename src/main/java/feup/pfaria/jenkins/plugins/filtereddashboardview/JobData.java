@@ -39,28 +39,28 @@ import java.util.ArrayList;
 @ExportedBean(defaultVisibility = 999)
 public class JobData {
     @Exported
-    public JobVar JobName = new JobVar("Name", "", "");
+    public JobVar jobName = new JobVar("Name", "", "");
     @Exported
-    public JobVar Status = new JobVar("Status", "", "");
+    public JobVar status = new JobVar("Status", "", "");
     @Exported
-    public JobVar JobUrl = new JobVar("URL", "", "");
+    public JobVar jobUrl = new JobVar("URL", "", "");
     @Exported
-    public JobVar Dir = new JobVar("Directory", "", "");
+    public JobVar dir = new JobVar("Directory", "", "");
     @Exported
-    public JobVar LastBuildNr = new JobVar("Build Number", "", "expandable");
+    public JobVar lastBuildNr = new JobVar("Build Number", "", "expandable");
     @Exported
-    public JobVar LastBuildUrl = new JobVar("Last Build URL", "", "");
+    public JobVar lastBuildUrl = new JobVar("Last Build URL", "", "");
     @Exported
-    public ArrayList<Build> Builds = new ArrayList<Build>();
+    public ArrayList<Build> builds = new ArrayList<Build>();
 
     public JobData(String jobName, String status, String jobUrl, String dir, String lastBuildNr, String lastBuildUrl, ArrayList<Build> builds) {
-        this.JobName.setValue(jobName);
-        this.Status.setValue(status);
-        this.JobUrl.setValue("../../" + jobUrl);            //jenkinsHome/...
-        this.Dir.setValue(dir);
-        this.LastBuildNr.setValue(lastBuildNr);             //jenkinsHome/...
-        this.LastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
-        this.Builds = builds;
+        this.jobName.setValue(jobName);
+        this.status.setValue(status);
+        this.jobUrl.setValue("../../" + jobUrl);            //jenkinsHome/...
+        this.dir.setValue(dir);
+        this.lastBuildNr.setValue(lastBuildNr);             //jenkinsHome/...
+        this.lastBuildUrl.setValue("../../" + lastBuildUrl);           //jenkinsHome/...
+        this.builds = builds;
     }
 
     @ExportedBean(defaultVisibility = 999)

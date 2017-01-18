@@ -133,7 +133,7 @@ function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
     // Remove all existing divs
     $(divSelector + ' button').remove();
     $.each( data.allJobs, function( key, val ) {
-      switch (val.Status.value) {
+      switch (val.status.value) {
         case 'SUCCESS':
           classes = 'btn-success';
           break;
@@ -167,11 +167,11 @@ function reload_jenkins_jobs(divSelector, viewUrl, buttonClass) {
       }
 
       newDiv =
-      '<button id="' + val.JobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.JobName.value + '</p>' +
-            '<div id="expandable_'+val.JobName.value+'" class="">' +
+      '<button id="' + val.jobName.value + '" class="btn ' + buttonClass + ' ' + classes + ' col-lg-6">' + '<p>' + val.jobName.value + '</p>' +
+            '<div id="expandable_'+val.jobName.value+'" class="">' +
                 expandable +
             '</div>' +
-          '<p><a class="goTo" href="' + val.JobUrl.value + '">' + '(Go To Job)' + '</a></p>' +
+          '<p><a class="goTo" href="' + val.jobUrl.value + '">' + '(Go To Job)' + '</a></p>' +
       '</button>';
 
       $(divSelector).append(newDiv);
@@ -337,16 +337,16 @@ var createTable = function(projectJobs, tableSize){
         for(let job of projectJobs){
             var rowIndex = 1;
             newCol = {jobName : "", url: ""};
-            newCol.jobName = job.JobName.value;
-            newCol.url = job.JobUrl.value;
+            newCol.jobName = job.jobName.value;
+            newCol.url = job.jobUrl.value;
             projectTable.columns.push(newCol);
-            for(let build of job.Builds){
+            for(let build of job.builds){
                 newCell = {url : "", result : "", jobName : "", tags : "", buildNr : ""};
                 newCell.url = build.buildUrl;
                 newCell.result = build.result;
-                newCell.jobName = job.JobName.value;
+                newCell.jobName = job.jobName.value;
                 newCell.buildNr = build.number;
-                newCell.tags = build.Tags;
+                newCell.tags = build.tags;
                 if(projectTable.rows[rowIndex])
                     projectTable.rows[rowIndex].push(newCell);
                 else{
@@ -435,8 +435,8 @@ var createTags = function(projectJobs){
     var tags = new Array();
 
     for(let job of projectJobs){
-        for(let build of job.Builds){
-            for(let tag of build.Tags){
+        for(let build of job.builds){
+            for(let tag of build.tags){
                 if(!tags.hasOwnProperty(tag.label)){
                     tags[tag.label] = [];
                 }

@@ -357,9 +357,12 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
 
     /********/
 
+    /**
+     * Don't allow default subview for a NestedView that is the Jenkins default view..
+     * (you wouldn't see the other top level view tabs, as it'd always jump into subview)
+     * @return defaultView
+     */
     public View getDefaultView() {
-        // Don't allow default subview for a NestedView that is the Jenkins default view..
-        // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
         return this.isDefault() ? null : getView(defaultViewName);
     }
 

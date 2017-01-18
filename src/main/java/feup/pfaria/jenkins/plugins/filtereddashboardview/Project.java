@@ -30,8 +30,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.util.ArrayList;
 
 /**
- * Custom View class used in the Dashboard
- * Has JobData associated to it
+ * Custom View class used in the Dashboard Has JobData associated to it
  *
  * @author Pedro Faria  &lt;pedrodiasfaria@gmail.com&gt;
  */
@@ -64,7 +63,7 @@ public class Project{
         String status = "NOTBUILT"; //consider not built by default
 
         for (JobData job : this.projectJobs) {
-            switch (job.Status.value) {
+            switch (job.status.value) {
                 case "FAILURE":
                     failure++;
                     break;

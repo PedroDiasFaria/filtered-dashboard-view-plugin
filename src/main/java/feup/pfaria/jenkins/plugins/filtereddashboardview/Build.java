@@ -53,7 +53,7 @@ public class Build {
     @Exported
     public String buildUrl;
     @Exported
-    public ArrayList<Tag> Tags = new ArrayList<Tag>();
+    public ArrayList<Tag> tags = new ArrayList<Tag>();
 
     public Build(String jobName, String buildName, int number, long startTime, long duration, String buildUrl, String result, ArrayList<Tag> tags) {
         this.jobName = jobName;
@@ -63,6 +63,6 @@ public class Build {
         this.duration = duration;
         this.buildUrl = "../../" + buildUrl;
         this.result = result;
-        this.Tags = new ArrayList<Tag>(tags);
+        this.tags = new ArrayList<Tag>(tags);
     }
 }
