@@ -49,5 +49,4 @@ Pedro Faria
 
 pedrodiasfaria@gmail.com
 
-
-                ei11167@fe.up.pt
+ei11167@fe.up.pt
