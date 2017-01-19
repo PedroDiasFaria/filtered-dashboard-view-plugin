@@ -380,6 +380,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
     public Collection<Project> getAllProjects() {
         List<View> projects = new ArrayList<View>(getViews());
         ArrayList<Project> allProjects = new ArrayList<Project>();
+        this.jobsMap = new HashMap<>();     //If one job was deleated meanwhile
 
         for (View p : projects) {
             if (this.selectedViews.containsKey(p.getViewName()) && !p.getClass().equals(this.getClass())) {   //Views of this class aren't shown inside it
@@ -575,6 +576,7 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
 
             for (String jobName : this.jobsMap.keySet()) {
                 Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
+
 
                 // Skip Maven modules. They are part of parent Maven project
                 if (job.getClass().getName().equals("hudson.maven.MavenModule"))
