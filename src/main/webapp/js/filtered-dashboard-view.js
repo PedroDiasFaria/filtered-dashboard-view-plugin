@@ -367,13 +367,14 @@ var createTable = function(projectJobs, tableSize){
         for(var rowNr in  projectTable.rows){
             if(projectTable.rows.hasOwnProperty(rowNr)){
                 //You can search by 'row:nr' to display only that row: e.g. row:5
-                tbody+= '<tr><td class="row-nr"><span style="display:none">row:'+ rowNr +'</span>' + rowNr + '</td>';
+                tbody+= '<tr><td class="row-nr">'+  rowNr + '</td>';
                 for(let column of projectTable.columns){
                     rowArray = projectTable.rows[rowNr];
                     newCell = "";
                     for(let cell of rowArray){
                         if(cell.jobName == column.jobName ){
                             newCell= '<td class="cell ' + cell.result + '">';
+                            newCell+= '<span style="display:none">row:'+ rowNr +'</span>';
                             if(cell.url == "null"){
                                 newCell+= '<a href="javascript:;"><div>' + cell.result+ '</div>';
                             }else{

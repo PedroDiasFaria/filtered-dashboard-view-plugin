@@ -577,16 +577,17 @@ public class FilteredDashboardView extends View implements ViewGroup, StaplerPro
             for (String jobName : this.jobsMap.keySet()) {
                 Job job = Jenkins.getInstance().getItemByFullName(jobName, Job.class);
 
+                if(job != null) {
+                    // Skip Maven modules. They are part of parent Maven project
+                    if (job.getClass().getName().equals("hudson.maven.MavenModule"))
+                        continue;
 
-                // Skip Maven modules. They are part of parent Maven project
-                if (job.getClass().getName().equals("hudson.maven.MavenModule"))
-                    continue;
+                    // If filtering is enabled, skip jobs not matching the filter
+                    if (r != null && !r.matcher(job.getName()).find())
+                        continue;
 
-                // If filtering is enabled, skip jobs not matching the filter
-                if (r != null && !r.matcher(job.getName()).find())
-                    continue;
-
-                jobs.add(job);
+                    jobs.add(job);
+                }
             }
 
             RunList builds = new RunList(jobs).limit(200);  //We can ignore if the builds of this project are beyond the 200th
